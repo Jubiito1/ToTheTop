@@ -48,6 +48,15 @@ public class Client {
         socket.send(dataInputPacket);
     }
 
+    public void run() {
+        try{
+
+            initializeConnection(broadcastConnection());
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 }

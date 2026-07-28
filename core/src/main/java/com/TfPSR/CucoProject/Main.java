@@ -1,5 +1,8 @@
 package com.TfPSR.CucoProject;
 
+import com.TfPSR.CucoProject.network.client.Client;
+import com.TfPSR.CucoProject.network.server.GameServer;
+import com.TfPSR.CucoProject.network.threads.BroadCastSender;
 import com.TfPSR.CucoProject.screens.GameScreen;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Screen;
@@ -10,6 +13,12 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+import javax.swing.plaf.TableHeaderUI;
+import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,13 +31,40 @@ public class Main extends Game { //We use Game, because it has better methods of
     private Batch batch;
     private OrthographicCamera camera;
     private Viewport viewport;
+    private boolean isServer;
+
+    Client client;
+    GameServer gameServer;
+    BroadCastSender broadCastSender;
+
+
 
     public Main(boolean isServer){
-
+        this.isServer = isServer;
     };
 
     @Override
     public void create() {
+        if(!isServer){
+            try {
+                client = new Client(); //It needs the try catch, because of the constructor, it handles socket exceptions
+                new Thread((Runnable) client).start(); //We send client to other thread to get it out of the main game thread, beacuse it stands by all the process
+            } catch (SocketException e) {
+                throw new RuntimeException(e);
+            }
+        }else{
+            gameServer = new GameServer();
+            try {
+                broadCastSender = new BroadCastSender();//It needs the try catch, because of the constructor, it handles socket exceptions
+                new Thread(broadCastSender).start();
+
+            } catch (SocketException e) {
+                throw new RuntimeException(e);
+            } catch (UnknownHostException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         this.batch = new SpriteBatch();
         this.camera = new OrthographicCamera();
         this.viewport = new FitViewport(MAX_WIDTH, MAX_HEIGHT, camera);
