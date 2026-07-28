@@ -17,7 +17,7 @@ public class Client {
     public byte idAssigned;
 
     public Client() throws SocketException {
-        this.socket = new DatagramSocket();
+        this.socket = new DatagramSocket(NetworkConfig.BROADCAST_PORT);
     }
 
     public void initializeConnection(InetAddress address) throws IOException {
@@ -40,6 +40,15 @@ public class Client {
 
         return dataPacket.getAddress();
     }
+
+    public void inputPerTick(InputPacket inputPacket) throws IOException {
+        inputPacket.clientId = idAssigned;
+        byte[] inputPacketBytes = inputPacket.toBytes();
+        DatagramPacket dataInputPacket = new DatagramPacket(inputPacketBytes, inputPacketBytes.length);
+        socket.send(dataInputPacket);
+    }
+
+
 
 }
 

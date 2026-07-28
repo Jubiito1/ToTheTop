@@ -23,6 +23,10 @@ public class Main extends Game { //We use Game, because it has better methods of
     private OrthographicCamera camera;
     private Viewport viewport;
 
+    public Main(boolean isServer){
+
+    };
+
     @Override
     public void create() {
         this.batch = new SpriteBatch();
