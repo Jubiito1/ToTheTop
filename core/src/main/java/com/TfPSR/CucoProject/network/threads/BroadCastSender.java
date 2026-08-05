@@ -7,17 +7,23 @@ import java.io.IOException;
 import java.net.*;
 
 public class BroadCastSender implements Runnable {
-    public boolean connectionStatus;
+    public static boolean connectionStatus;
     public DatagramSocket socket;
     public DatagramPacket connectionData;
-    InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
+    InetAddress broadcastAddress = InetAddress.getByName("127.0.0.1");
 
     public BroadCastSender() throws SocketException, UnknownHostException {
-        this.connectionStatus = false;
+        System.out.println("llega");
+        connectionStatus = false;
         this.socket = new DatagramSocket();
+        socket.setBroadcast(true);
 
-        this.connectionData = new DatagramPacket(ConnectPacket.BROAD,1,  broadcastAddress, NetworkConfig.BROADCAST_PORT);
-    }
+        this.connectionData = new DatagramPacket(
+            ConnectPacket.BROAD,
+            ConnectPacket.BROAD.length,
+            broadcastAddress,
+            NetworkConfig.BROADCAST_PORT
+        );}
 
     @Override
     public void run() {
@@ -25,9 +31,10 @@ public class BroadCastSender implements Runnable {
         while(!connectionStatus){
             try {
                 Thread.sleep(2000);
+                System.out.println("Enviando a: " + connectionData.getAddress() + ":" + connectionData.getPort());
                 socket.send(connectionData);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

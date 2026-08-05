@@ -1,5 +1,6 @@
 package com.TfPSR.CucoProject.network.client;
 
+import com.TfPSR.CucoProject.network.protocol.AssignIdPacket;
 import com.TfPSR.CucoProject.network.protocol.ConnectPacket;
 import com.TfPSR.CucoProject.network.protocol.InputPacket;
 import com.TfPSR.CucoProject.network.protocol.NetworkConfig;
@@ -10,7 +11,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 
-public class Client {
+public class Client implements Runnable{
     public DatagramSocket socket;
     public DatagramPacket packet;
     public boolean conected;
@@ -22,7 +23,7 @@ public class Client {
 
     public void initializeConnection(InetAddress address) throws IOException {
             socket.connect(address, NetworkConfig.SERVER_PORT);
-            byte[] buf = new byte[InputPacket.SIZE];
+            byte[] buf = new byte[AssignIdPacket.SIZE];
             DatagramPacket dataPacket = new DatagramPacket(buf, buf.length); //Creamos para almacenar la respuesta
             this.packet = new DatagramPacket(ConnectPacket.BYTES, ConnectPacket.SIZE);  //Creamos para enviar peticion
             socket.send(packet);
@@ -50,7 +51,8 @@ public class Client {
 
     public void run() {
         try{
-
+            System.out.println(socket.getLocalPort());
+            System.out.println(socket.getInetAddress());
             initializeConnection(broadcastConnection());
         }catch (IOException e) {
             e.printStackTrace();

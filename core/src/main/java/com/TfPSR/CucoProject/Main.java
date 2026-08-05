@@ -53,14 +53,14 @@ public class Main extends Game { //We use Game, because it has better methods of
                 throw new RuntimeException(e);
             }
         }else{
-            gameServer = new GameServer();
             try {
-                broadCastSender = new BroadCastSender();//It needs the try catch, because of the constructor, it handles socket exceptions
-                new Thread(broadCastSender).start();
+                broadCastSender = new BroadCastSender();
+                gameServer = new GameServer();
 
-            } catch (SocketException e) {
-                throw new RuntimeException(e);
-            } catch (UnknownHostException e) {
+                new Thread(broadCastSender).start();
+                new Thread((Runnable) gameServer).start();
+
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }

@@ -1,15 +1,13 @@
 package com.TfPSR.CucoProject.network.server;
 
-import com.TfPSR.CucoProject.network.protocol.InputPacket;
-import com.TfPSR.CucoProject.network.protocol.NetworkConfig;
-import com.TfPSR.CucoProject.network.protocol.PacketType;
+import com.TfPSR.CucoProject.network.protocol.*;
+import com.TfPSR.CucoProject.network.threads.BroadCastSender;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketException;
 
-public class GameServer {
+public class GameServer implements Runnable{
     DatagramSocket socket;
     boolean serverRunning = false;
 
@@ -30,12 +28,27 @@ public class GameServer {
     }
 
 
-    public void handlePacket(DatagramPacket data, byte packetType){
+    public void handlePacket(DatagramPacket data, byte packetType) throws IOException {
         if(packetType == PacketType.CONNECT){
+            BroadCastSender.connectionStatus = true;
             System.out.println("El cliente quiere conectarse");
+
+            DatagramPacket answer = new DatagramPacket(AssignIdPacket.AssignId, AssignIdPacket.AssignId.length, data.getAddress(), data.getPort());
+
+            socket.send(answer);
+
         }else if(packetType == PacketType.INPUT){
             System.out.println("El cliente quiere enviar un paquete");
         }
 
+    }
+
+    @Override
+    public void run() {
+        try {
+            start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
