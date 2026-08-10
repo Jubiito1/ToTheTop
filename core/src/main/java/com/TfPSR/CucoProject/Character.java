@@ -1,7 +1,5 @@
 package com.TfPSR.CucoProject;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -32,8 +30,8 @@ public class Character {
 
     private final Body head;
     private final Body torso;
-    private final FullArm leftArm;
-    private final FullArm rightArm;
+    private final Arm leftArm;
+    private final Arm rightArm;
     private final Body leftLeg;
     private final Body rightLeg;
 
@@ -75,8 +73,8 @@ public class Character {
 
         this.head = ShapeFactory.createRectangle(headPosition, headSize, 0, BodyDef.BodyType.DynamicBody, world, headDensity, 0f, 0, false, groupIndex);
         this.torso = ShapeFactory.createRectangle(torsoPosition, torsoSize, 0, BodyDef.BodyType.DynamicBody, world, torsoDensity, 0f, 0, false, groupIndex);
-        this.leftArm = new FullArm(leftArmPosition, armsSize, 0, BodyDef.BodyType.DynamicBody, world, armsDensity, 0f, 0, groupIndex, Sides.LEFT);
-        this.rightArm = new FullArm(rightArmPosition, armsSize, 0, BodyDef.BodyType.DynamicBody, world, armsDensity, 0f, 0, groupIndex, Sides.RIGHT);
+        this.leftArm = new Arm(leftArmPosition, armsSize, 0, BodyDef.BodyType.DynamicBody, world, armsDensity, 0f, 0, groupIndex, Sides.LEFT);
+        this.rightArm = new Arm(rightArmPosition, armsSize, 0, BodyDef.BodyType.DynamicBody, world, armsDensity, 0f, 0, groupIndex, Sides.RIGHT);
         this.leftLeg = ShapeFactory.createRectangle(leftLegPosition, legsSize, 0, BodyDef.BodyType.DynamicBody, world, legsDensity, 0f, 0, false, groupIndex);
         this.rightLeg = ShapeFactory.createRectangle(rightLegPosition, legsSize, 0, BodyDef.BodyType.DynamicBody, world, legsDensity, 0f, 0, false, groupIndex);
 
@@ -90,8 +88,8 @@ public class Character {
         Vector2 rightLegHipAnchor = new Vector2(0, (legsSize.y / 2));
 
         RevoluteJoint neckJoint = JointFactory.createRevoluteJoint(torso, head, false, torsoNeckAnchor, headNeckAnchor, world, -45, 45);
-        RevoluteJoint leftShoulderJoint = JointFactory.createRevoluteJoint(torso, leftArm.getArm(), false, leftShoulderAnchor, leftArm.getShoulderAnchor(), world, -180f, 0f);
-        RevoluteJoint rightShoulderJoint = JointFactory.createRevoluteJoint(torso, rightArm.getArm(), false, rightShoulderAnchor, rightArm.getShoulderAnchor(), world, 0f, 180f);
+        RevoluteJoint leftShoulderJoint = JointFactory.createRevoluteJoint(torso, leftArm.getUpperArm(), false, leftShoulderAnchor, leftArm.getShoulderAnchor(), world, -180f, 0f);
+        RevoluteJoint rightShoulderJoint = JointFactory.createRevoluteJoint(torso, rightArm.getUpperArm(), false, rightShoulderAnchor, rightArm.getShoulderAnchor(), world, 0f, 180f);
         RevoluteJoint leftLegJoint = JointFactory.createRevoluteJoint(torso, leftLeg, false, leftTorsoHipAnchor, leftLegHipAnchor, world, -90, 90);
         RevoluteJoint rightLegJoint = JointFactory.createRevoluteJoint(torso, rightLeg, false, rightTorsoHipAnchor, rightLegHipAnchor, world, -90, 90);
     }
@@ -106,12 +104,12 @@ public class Character {
     }
 
     public void onLeftClickReleased() {
-
         leftHandFollowingMouse = false;
-
+        /*
         if(leftArm.getCurrentGripPoint() != null) {
             leftArm.grab(world);
         }
+         */
     }
 
     public void onRightClickPressed() {
@@ -126,10 +124,11 @@ public class Character {
     public void onRightClickReleased() {
 
         rightHandFollowingMouse = false;
-
+        /*
         if(rightArm.getCurrentGripPoint() != null) {
             rightArm.grab(world);
         }
+        */
     }
 
     public void update(Vector2 mousePosition, World world) {

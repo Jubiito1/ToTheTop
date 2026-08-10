@@ -23,10 +23,6 @@ public class GameScreen extends ScreenAdapter {
     private final Box2DDebugRenderer debugRenderer;
     private final Body groundBody;
     private final Character player;
-    private final GripPoint gripPoint1;
-    private final GripPoint gripPoint2;
-    private final GripPoint gripPoint3;
-    private final GripPoint gripPoint4;
 
     public GameScreen(Main game) {
         this.game = game;
@@ -45,11 +41,6 @@ public class GameScreen extends ScreenAdapter {
         );
 
         groundBody = ShapeFactory.createRectangle(new Vector2(0f, 0f), new Vector2(10f, 1f), 0, BodyDef.BodyType.StaticBody, world, 0.4f, 1f, 0, false, (short) 0);
-
-        gripPoint1 = new GripPoint(new Vector2(4, 2f), world);
-        gripPoint2 = new GripPoint(new Vector2(3, 3f), world);
-        gripPoint3 = new GripPoint(new Vector2(4, 4f), world);
-        gripPoint4 = new GripPoint(new Vector2(3, 5f), world);
 
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         Cursor invisibleCursor = Gdx.graphics.newCursor(pixmap, 0, 0);
