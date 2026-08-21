@@ -2,63 +2,63 @@
 
 ---
 
-## Integrantes del grupo
+## Team Members
 - Julian Guido Bollinger
 - Santino Gennuso Musmanno
 - Tomás Raiter
 
 ---
 
-## Descripción corta del juego
-**To The Top** es un videojuego 2D de vista frontal (front-view)
-para un-cuatro jugador/es, enfocado en la escalada mediante físicas,
-con modalidades tanto individual como multijugador cooperativo. 
-Los jugadores deben ascender una montaña volcánica compuesta por 
-diferentes secciones y obstáculos hasta alcanzar la cima antes de
-que ocurra una erupción, utilizando un sistema de movimiento basado
-en el uso de las extremidades y la interacción física (ragdoll) con
-el entorno y con otros jugadores. El proyecto toma como principales
-referencias e inspiración a **Getting Over It*, *Peak* y *Mount Your Friends**.
+## Short Game Description
+**To The Top** is a 2D front-view game for 1 to 4 players,
+focused on physics-based climbing, with both single-player
+and cooperative multiplayer modes. Players must climb a
+volcanic mountain made up of different sections and obstacles
+to reach the summit before an eruption occurs, using a
+movement system based on limb control and physical
+interaction (ragdoll) with the environment and with other
+players. The project's main references and inspirations are
+*Getting Over It*, *Peak*, and *Mount Your Friends*.
 
 ---
 
-## Tecnologías principales y plataformas objetivo
+## Main Technologies and Target Platforms
 - Java 21
-- LibGDX
-- Herramientas adicionales: Box2D(para físicas) y Tiled(Diseño de mapas)
-- Plataforma de desarrollo objetivo:Escritorio(Windows y Linux)
-- IDE utilizado: InteliJ IDEA Community Edition
+- LibGDX 1.14.1
+- Additional tools: Box2D (physics) and Tiled (map design)
+- Target platform: Desktop (Windows and Linux)
+- IDE used: IntelliJ IDEA Community Edition
 
 ---
 
-## Enlace a la wiki del proyecto(Propuesta Detallada)
+## Link to the Project Wiki (Detailed Proposal)
 
-[Ver la propuesta completa del proyecto aquí](https://github.com/Jubiito1/CucoProject/wiki/Propuesta-del-proyecto-‐-To-The-Top)
+[See the full project proposal here](https://github.com/Jubiito1/ToTheTop/wiki)
 
 ---
 
-## Cómo compilar y ejecutar
-### Windows y Linux
-1. *Clonar el repositorio*
+## How to Build and Run
+### Windows and Linux
 
-     ``` bash 
+1. **Clone the repository**
+
+```bash
    git clone https://github.com/Jubiito1/ToTheTop
    cd ToTheTop
-   ```    
-   
-2. *Importar el proyecto en un IDE compatible con gradle (recomendado InteliJ)*
-- Seleccionar como Gradle project
-- Verificar estar usando java 21
+```
 
-3. *Ejecutar el juego*
-- Desde el IDE electo ejecutar la clase Lwjgl3Launcher.java ubicada en el módulo lwjgl3
-- Desde la consola (Linux y Windows con gradlew)
+2. **Import the project into a Gradle-compatible IDE (IntelliJ recommended)**
+    - Select as a Gradle project
+    - Verify that Java 21 is being used
 
+3. **Run the game**
+    - From the IDE, run the `Lwjgl3Launcher.java` class located in the `lwjgl3` module
+    - Or from the console (Linux and Windows, using gradlew):
 
-``` bash   
-   #Linux 
+```bash
+   # Linux
    ./gradlew lwjgl3:run
-  
-  # Windows (CMD o PowerShell)
-  gradlew.bat lwjgl3:run
+
+   # Windows (CMD or PowerShell)
+   gradlew.bat lwjgl3:run
 ```
