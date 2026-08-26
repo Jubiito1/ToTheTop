@@ -1,11 +1,12 @@
-package com.TfPSR.CucoProject;
+package com.TfPSR.CucoProject.input;
 
+import com.TfPSR.CucoProject.entity.Character;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 
 public class GameInputProcessor extends InputAdapter {
 
-    private final Character player;
+    private final com.TfPSR.CucoProject.entity.Character player;
 
     public GameInputProcessor(Character player) {
         this.player = player;

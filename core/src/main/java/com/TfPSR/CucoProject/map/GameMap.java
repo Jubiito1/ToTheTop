@@ -1,8 +1,8 @@
-package com.TfPSR.CucoProject;
+package com.TfPSR.CucoProject.map;
 
+import com.TfPSR.CucoProject.core.Constants;
 import com.badlogic.gdx.maps.MapGroupLayer;
 import com.badlogic.gdx.maps.MapLayer;
-import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
