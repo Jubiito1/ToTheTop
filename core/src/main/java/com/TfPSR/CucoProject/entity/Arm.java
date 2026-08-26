@@ -31,6 +31,9 @@ public class Arm {
     private RevoluteJoint gripJoint;
     private ArmStates state = ArmStates.FREE;
 
+    private final Vector2 mouseOffset = new Vector2();
+    private final Vector2 targetPosition = new Vector2();
+
     public Arm(Vector2 position, Vector2 size, float angle, BodyDef.BodyType type, World world, float weight, float friction, float restitution, short groupIndex, Sides side) {
 
         Vector2 armSize = new Vector2(size.x, size.y * ARM_HEIGHT_RATIO);
@@ -79,9 +82,15 @@ public class Arm {
 
     }
 
-    public void movePlayerToMouse(Vector2 mousePosition) {
+    public void startDragging(Vector2 mousePosition) {
+        mouseOffset.set(hand.getPosition()).sub(mousePosition);
+    }
 
-        distance.set(mousePosition).sub(hand.getPosition());
+    public void moveHandToTarget(Vector2 mousePosition) {
+
+        targetPosition.set(mousePosition).add(mouseOffset);
+
+        distance.set(targetPosition).sub(hand.getPosition());
 
         velocity.set(hand.getLinearVelocity());
 
@@ -123,7 +132,7 @@ public class Arm {
     }
 
     public void update(Vector2 mousePosition) {
-        movePlayerToMouse(mousePosition);
+        moveHandToTarget(mousePosition);
     }
 
     public Body getUpperArm() {

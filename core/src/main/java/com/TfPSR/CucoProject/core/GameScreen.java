@@ -52,7 +52,7 @@ public class GameScreen extends ScreenAdapter {
         player = new Character( map.getPlayerSpawn(), new Vector2(0.6f, 1.80f), 80f, world);
 
         Gdx.input.setInputProcessor(
-            new GameInputProcessor(player)
+            new GameInputProcessor(player, viewport)
         );
 
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);

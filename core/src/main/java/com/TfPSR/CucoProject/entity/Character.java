@@ -99,12 +99,13 @@ public class Character {
         RevoluteJoint rightLegJoint = JointFactory.createRevoluteJoint(torso, rightLeg, false, rightTorsoHipAnchor, rightLegHipAnchor, world, -90, 90);
     }
 
-    public void onLeftClickPressed() {
+    public void onLeftClickPressed(Vector2 mousePosition) {
 
         if(leftArm.getState() == ArmStates.GRABBING) {
             leftArm.release(world);
         }
 
+        leftArm.startDragging(mousePosition);
         leftHandFollowingMouse = true;
     }
 
@@ -117,12 +118,13 @@ public class Character {
          */
     }
 
-    public void onRightClickPressed() {
+    public void onRightClickPressed(Vector2 mousePosition) {
 
         if(rightArm.getState() == ArmStates.GRABBING) {
             rightArm.release(world);
         }
 
+        rightArm.startDragging(mousePosition);
         rightHandFollowingMouse = true;
     }
 
