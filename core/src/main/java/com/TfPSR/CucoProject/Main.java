@@ -1,27 +1,67 @@
 package com.TfPSR.CucoProject;
 
+import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Game;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.ScreenUtils;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends Game { //We use Game, because it has better methods of pause, play, and resume
+    private static final float MAX_WIDTH = 16f;
+    private static final float MAX_HEIGHT = 9f;
+
+    private final Map<Class<? extends Screen>, Screen> screenCache = new HashMap<>();
     private Batch batch;
-    private Texture image;
+    private OrthographicCamera camera;
+    private Viewport viewport;
 
     @Override
     public void create() {
-        batch = new SpriteBatch();
-        setScreen(new MainMenu(this));
+        this.batch = new SpriteBatch();
+        this.camera = new OrthographicCamera();
+        this.viewport = new FitViewport(MAX_WIDTH, MAX_HEIGHT, camera);
+        addScreen(new GameScreen(this));
+        setScreen(GameScreen.class);
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+        viewport.update(width, height, true);
+
+    }
+
+    public void addScreen(Screen screen) {
+        screenCache.put(screen.getClass(), screen);
+    }
+
+    public void setScreen(Class<? extends Screen> screenClass) {
+        Screen screen = screenCache.get(screenClass);
+        if (screen == null) {
+            throw new GdxRuntimeException("No screen with class " + screenClass + " found in screenCache");
+        }
+        super.setScreen(screen);
     }
 
     @Override
     public void dispose() {
-        batch.dispose();
+        screenCache.values().forEach(Screen::dispose);
+        screenCache.clear();
+        this.batch.dispose();
     }
 
-    public Batch getBatch(){
-        return batch;
+    public Viewport getViewport() {
+        return this.viewport;
+    }
+
+    public OrthographicCamera getCamera() {
+        return this.camera;
+    }
+
+    public Batch getBatch() {
+        return this.batch;
     }
 }
