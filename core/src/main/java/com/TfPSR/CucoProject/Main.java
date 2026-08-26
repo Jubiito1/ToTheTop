@@ -1,4 +1,4 @@
-package com.TfPSR.ToTheTop;
+package com.TfPSR.CucoProject;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.Texture;
