@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -21,8 +22,12 @@ public class GameScreen extends ScreenAdapter {
 
     private final World world;
     private final Box2DDebugRenderer debugRenderer;
-    private final Body groundBody;
     private final Character player;
+
+    private final GameMap map;
+    private final OrthogonalTiledMapRenderer mapRenderer;
+
+    private final Rocks rocks;
 
     public GameScreen(Main game) {
         this.game = game;
@@ -30,17 +35,19 @@ public class GameScreen extends ScreenAdapter {
         this.camera = game.getCamera();
         this.batch = game.getBatch();
         this.debugRenderer = new Box2DDebugRenderer();
+        map = new GameMap("maps/map.tmx");
+        mapRenderer = new OrthogonalTiledMapRenderer(map.getTiledMap(), 1f / Constants.PIXELS_PER_METER);
 
         world = new World(GRAVEDAD, true);
         world.setContactListener(new GameContactListener());
 
-        player = new Character( new Vector2(2f, 4f), new Vector2(0.6f, 1.80f), 80f, world);
+        rocks = new Rocks(map.getSurfaceObjects(), world);
+
+        player = new Character( map.getPlayerSpawn(), new Vector2(0.6f, 1.80f), 80f, world);
 
         Gdx.input.setInputProcessor(
             new GameInputProcessor(player)
         );
-
-        groundBody = ShapeFactory.createRectangle(new Vector2(0f, 0f), new Vector2(10f, 1f), 0, BodyDef.BodyType.StaticBody, world, 0.4f, 1f, 0, false, (short) 0);
 
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         Cursor invisibleCursor = Gdx.graphics.newCursor(pixmap, 0, 0);
@@ -70,17 +77,19 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void draw() {
+        mapRenderer.setView(camera);
+        mapRenderer.render();
+
         batch.setProjectionMatrix(camera.combined);
         debugRenderer.render(world, camera.combined);
     }
 
     private void update(float delta) {
-        camera.position.set(0, 2, 0);
-        camera.zoom = 1f;
+        player.update(findMousePosition(), world);
+        world.step(delta, 10, 4);
+        camera.position.set(20, 10, 0);
+        camera.zoom = 2f;
         camera.update();
 
-        player.update(findMousePosition(), world);
-
-        world.step(delta, 10, 4);
     }
 }

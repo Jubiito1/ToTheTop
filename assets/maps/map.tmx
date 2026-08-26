@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="8" nextobjectid="17">
+ <group id="3" name="Gameplay">
+  <objectgroup id="7" name="Player">
+   <object id="15" name="PlayerSpawn" type="SpawnPoints" x="752" y="424">
+    <point/>
+   </object>
+  </objectgroup>
+  <objectgroup id="4" name="Surface">
+   <object id="2" name="Rock1" type="Rock" x="248.667" y="225.333">
+    <polygon points="29.3333,174.667 118,143.333 141.333,105.333 277.333,102.667 335.333,162.667 348.667,272 317.333,366.667 219.333,412.667 61.3333,393.333 19.3333,300.667"/>
+   </object>
+   <object id="3" name="Rock2" type="Rock" x="195.333" y="292.667">
+    <polygon points="0,0 62,36.6667 149.333,16.6667 124,-64.6667 76,-80.6667 48,-117.333 28.6667,-112.667 -8,-53.3333"/>
+   </object>
+   <object id="11" name="Rock3" type="Rock" x="664" y="272">
+    <polygon points="0,0 -88,0 -152,-56 -192,-112 -264,-120 -272,-152 -136,-168 -72,-112 32,-72"/>
+   </object>
+   <object id="14" name="Rock4" type="Rock" x="600" y="568">
+    <polygon points="0,0 32,-32 264,-32 296,32 208,56"/>
+   </object>
+   <object id="16" name="Rock5" type="Rock" x="920" y="536">
+    <polygon points="0,0 -64,-40 -64,-224 -120,-424 -264,-472 -192,-504 -8,-432"/>
+   </object>
+  </objectgroup>
+ </group>
+</map>

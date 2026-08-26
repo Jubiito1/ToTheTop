@@ -57,4 +57,29 @@ public class ShapeFactory {
         return body;
 
     }
+
+    public static Body createClosedChain(Vector2[] vertices, BodyDef.BodyType type, World world, float density, float friction, float restitution, boolean isSensor, short groupIndex) {
+
+        //define body
+        final BodyDef bodyDef = new BodyDef();
+        bodyDef.type = type;
+        final Body body = world.createBody(bodyDef);
+
+        //define fixture
+        final ChainShape shape = new ChainShape();
+        shape.createLoop(vertices);
+        final FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = shape;
+        fixtureDef.density = density;
+        fixtureDef.friction = friction;
+        fixtureDef.restitution = restitution;
+        fixtureDef.isSensor = isSensor;
+        fixtureDef.filter.groupIndex = groupIndex;
+
+        body.createFixture(fixtureDef);
+        shape.dispose();
+
+        return body;
+
+    }
 }
