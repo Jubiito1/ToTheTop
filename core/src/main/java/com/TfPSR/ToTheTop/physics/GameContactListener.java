@@ -1,6 +1,6 @@
-package com.TfPSR.CucoProject.physics;
+package com.TfPSR.ToTheTop.physics;
 
-import com.TfPSR.CucoProject.entity.Arm;
+import com.TfPSR.ToTheTop.entity.Arm;
 import com.badlogic.gdx.physics.box2d.*;
 
 public class GameContactListener implements ContactListener {

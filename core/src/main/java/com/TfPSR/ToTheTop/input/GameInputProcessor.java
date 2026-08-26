@@ -1,6 +1,6 @@
-package com.TfPSR.CucoProject.input;
+package com.TfPSR.ToTheTop.input;
 
-import com.TfPSR.CucoProject.entity.Character;
+import com.TfPSR.ToTheTop.entity.Character;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.Vector2;

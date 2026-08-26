@@ -1,11 +1,11 @@
-package com.TfPSR.CucoProject.core;
+package com.TfPSR.ToTheTop.core;
 
-import com.TfPSR.CucoProject.*;
-import com.TfPSR.CucoProject.entity.Character;
-import com.TfPSR.CucoProject.input.GameInputProcessor;
-import com.TfPSR.CucoProject.map.GameMap;
-import com.TfPSR.CucoProject.map.Rocks;
-import com.TfPSR.CucoProject.physics.GameContactListener;
+import com.TfPSR.ToTheTop.*;
+import com.TfPSR.ToTheTop.entity.Character;
+import com.TfPSR.ToTheTop.input.GameInputProcessor;
+import com.TfPSR.ToTheTop.map.GameMap;
+import com.TfPSR.ToTheTop.map.Rocks;
+import com.TfPSR.ToTheTop.physics.GameContactListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Cursor;

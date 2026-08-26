@@ -1,7 +1,7 @@
-package com.TfPSR.CucoProject.map;
+package com.TfPSR.ToTheTop.map;
 
-import com.TfPSR.CucoProject.core.Constants;
-import com.TfPSR.CucoProject.physics.ShapeFactory;
+import com.TfPSR.ToTheTop.core.Constants;
+import com.TfPSR.ToTheTop.physics.ShapeFactory;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.objects.PolygonMapObject;

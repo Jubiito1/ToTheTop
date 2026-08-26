@@ -1,6 +1,6 @@
-package com.TfPSR.CucoProject.map;
+package com.TfPSR.ToTheTop.map;
 
-import com.TfPSR.CucoProject.core.Constants;
+import com.TfPSR.ToTheTop.core.Constants;
 import com.badlogic.gdx.maps.MapGroupLayer;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObjects;

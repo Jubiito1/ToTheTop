@@ -1,4 +1,4 @@
-package com.TfPSR.CucoProject.entity;
+package com.TfPSR.ToTheTop.entity;
 
 public enum Sides {
     LEFT, RIGHT
