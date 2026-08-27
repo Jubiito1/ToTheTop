@@ -52,13 +52,13 @@ public class GameScreen extends ScreenAdapter {
         player = new Character( map.getPlayerSpawn(), new Vector2(0.6f, 1.80f), 80f, world);
 
         Gdx.input.setInputProcessor(
-            new GameInputProcessor(player, viewport)
+            new GameInputProcessor()
         );
 
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         Cursor invisibleCursor = Gdx.graphics.newCursor(pixmap, 0, 0);
 
-        Gdx.graphics.setCursor(invisibleCursor);
+        Gdx.input.setCursorCatched(true);
 
         pixmap.dispose();
     }
@@ -91,7 +91,6 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void update(float delta) {
-        player.update(findMousePosition(), world);
         world.step(delta, 10, 4);
         camera.position.set(20, 10, 0);
         camera.zoom = 2f;

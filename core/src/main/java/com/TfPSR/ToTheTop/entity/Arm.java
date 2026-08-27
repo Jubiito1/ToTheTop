@@ -21,18 +21,6 @@ public class Arm {
     private final Body forearm;
     private final Body upperArm;
     private final Vector2 shoulderAnchor;
-    private final Vector2 distance = new Vector2();
-    private final Vector2 velocity = new Vector2();
-    private final Vector2 force = new Vector2();
-    private final float proportionalGain = 100f;
-    private final float derivativeGain = 40f;
-    private static final float MAX_FORCE = 1000f;
-
-    private RevoluteJoint gripJoint;
-    private ArmStates state = ArmStates.FREE;
-
-    private final Vector2 mouseOffset = new Vector2();
-    private final Vector2 targetPosition = new Vector2();
 
     public Arm(Vector2 position, Vector2 size, float angle, BodyDef.BodyType type, World world, float weight, float friction, float restitution, short groupIndex, Sides side) {
 
@@ -82,69 +70,12 @@ public class Arm {
 
     }
 
-    public void startDragging(Vector2 mousePosition) {
-        mouseOffset.set(hand.getPosition()).sub(mousePosition);
-    }
-
-    public void moveHandToTarget(Vector2 mousePosition) {
-
-        targetPosition.set(mousePosition).add(mouseOffset);
-
-        distance.set(targetPosition).sub(hand.getPosition());
-
-        velocity.set(hand.getLinearVelocity());
-
-        force.set(distance).scl(proportionalGain).sub(velocity.x * derivativeGain, velocity.y * derivativeGain);
-
-        if(force.len() > MAX_FORCE) {
-            force.setLength(MAX_FORCE);
-        }
-
-        hand.applyForceToCenter(force, true);
-    }
-
-    public void grab(World world) {
-        /*
-        if(currentGripPoint == null) {
-            return;
-        }
-
-        if(state == ArmStates.GRABBING) {
-            return;
-        }
-
-        gripJoint = JointFactory.createRevoluteJoint(hand, currentGripPoint.getBody(), false, new Vector2(0, 0), new Vector2(0, 0), world);
-
-        state = ArmStates.GRABBING;
-        */
-    }
-
-    public void release(World world) {
-
-        if(state == ArmStates.FREE) {
-            return;
-        }
-
-        world.destroyJoint(gripJoint);
-
-        gripJoint = null;
-        state = ArmStates.FREE;
-    }
-
-    public void update(Vector2 mousePosition) {
-        moveHandToTarget(mousePosition);
-    }
-
     public Body getUpperArm() {
         return upperArm;
     }
 
     public Vector2 getShoulderAnchor() {
         return shoulderAnchor;
-    }
-
-    public ArmStates getState() {
-        return state;
     }
 
 }
