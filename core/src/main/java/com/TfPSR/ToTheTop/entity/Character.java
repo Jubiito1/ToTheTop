@@ -95,4 +95,14 @@ public class Character {
         RevoluteJoint leftLegJoint = JointFactory.createRevoluteJoint(torso, leftLeg, false, leftTorsoHipAnchor, leftLegHipAnchor, world, -90, 90);
         RevoluteJoint rightLegJoint = JointFactory.createRevoluteJoint(torso, rightLeg, false, rightTorsoHipAnchor, rightLegHipAnchor, world, -90, 90);
     }
+
+    public void update(Vector2 mouseVelocity, boolean leftMousePressed, boolean rightMousePressed) {
+        if (leftMousePressed) {
+            leftArm.update(mouseVelocity);
+        }
+
+        if (rightMousePressed) {
+            rightArm.update(mouseVelocity);
+        }
+    }
 }
