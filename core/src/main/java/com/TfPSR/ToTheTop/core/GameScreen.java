@@ -63,16 +63,6 @@ public class GameScreen extends ScreenAdapter {
         pixmap.dispose();
     }
 
-    public Vector2 findMousePosition() {
-        Vector2 mousePosition = new Vector2(Gdx.input.getX(), Gdx.input.getY());
-
-        viewport.unproject(mousePosition);
-
-        return mousePosition;
-    }
-
-
-
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
