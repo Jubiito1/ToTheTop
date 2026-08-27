@@ -39,9 +39,6 @@ public class Character {
     private final Body leftLeg;
     private final Body rightLeg;
 
-    private boolean leftHandFollowingMouse;
-    private boolean rightHandFollowingMouse;
-
     private final short groupIndex = -1;
 
     public Character(Vector2 position, Vector2 size, float weight, World world) {
