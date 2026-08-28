@@ -108,10 +108,10 @@ public class Character {
         RevoluteJoint rightShoulderJoint = JointFactory.createRevoluteJoint(torso, rightArm.getUpperArm(), false, rightShoulderAnchor, rightArm.getShoulderAnchor(), world, 0f, 180f);
         RevoluteJoint leftLegJoint = JointFactory.createRevoluteJoint(torso, leftLeg, false, leftTorsoHipAnchor, leftLegHipAnchor, world, -90, 90);
         RevoluteJoint rightLegJoint = JointFactory.createRevoluteJoint(torso, rightLeg, false, rightTorsoHipAnchor, rightLegHipAnchor, world, -90, 90);
-        this.spriteHead = createBodyPartSprite(headSize.x, headSize.y, "/home/santino/IdeaProjects/TrabajoFinal/ToTheTop/core/src/main/java/photos/img_1.png");
-        this.spriteTorso= createBodyPartSprite(torsoSize.x, torsoSize.y, "/home/santino/IdeaProjects/TrabajoFinal/ToTheTop/core/src/main/java/photos/img_3.png");
-        this.spriteLeftLeg= createBodyPartSprite(legsSize.x, legsSize.y, "/home/santino/IdeaProjects/TrabajoFinal/ToTheTop/core/src/main/java/photos/img_2.png");
-        this.spriteRightLeg= createBodyPartSprite(legsSize.x, legsSize.y, "/home/santino/IdeaProjects/TrabajoFinal/ToTheTop/core/src/main/java/photos/img_2.png");
+        this.spriteHead = createBodyPartSprite(headSize.x, headSize.y, "sprites/head.png");
+        this.spriteTorso= createBodyPartSprite(torsoSize.x, torsoSize.y, "sprites/torso.png");
+        this.spriteLeftLeg= createBodyPartSprite(legsSize.x, legsSize.y, "sprites/leg.png");
+        this.spriteRightLeg= createBodyPartSprite(legsSize.x, legsSize.y, "sprites/leg.png");
     }
 
     private Sprite createBodyPartSprite(float width, float height, String spritePath) {
