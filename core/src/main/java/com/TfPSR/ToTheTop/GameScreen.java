@@ -1,10 +1,7 @@
-package com.TfPSR.CucoProject;
+package com.TfPSR.ToTheTop;
 
-import com.TfPSR.CucoProject.asset.AssetService;
-import com.TfPSR.CucoProject.asset.SoundAsset;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -21,29 +18,23 @@ public class GameScreen extends ScreenAdapter {
     private final Viewport viewport;
     private final OrthographicCamera camera;
     private final Batch batch;
+
     private final World world;
     private final Box2DDebugRenderer debugRenderer;
     private final Body groundBody;
     private final Character player;
-    private final AssetService assetService;
-    private final Sound dash;
 
-    public  GameScreen(Main game, AssetService assetService) {
+    public GameScreen(Main game) {
         this.game = game;
         this.viewport = game.getViewport();
         this.camera = game.getCamera();
         this.batch = game.getBatch();
-        this.assetService = assetService;
         this.debugRenderer = new Box2DDebugRenderer();
-        this.dash = assetService.get(SoundAsset.DASH);
 
         world = new World(GRAVEDAD, true);
         world.setContactListener(new GameContactListener());
 
-
-        this.dash.play();
-
-        player = new Character( new Vector2(2f, 4f), new Vector2(0.6f, 1.80f), 80f, world, dash);
+        player = new Character( new Vector2(2f, 4f), new Vector2(0.6f, 1.80f), 80f, world);
 
         Gdx.input.setInputProcessor(
             new GameInputProcessor(player)

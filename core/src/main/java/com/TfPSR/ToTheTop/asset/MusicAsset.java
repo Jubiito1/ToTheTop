@@ -5,7 +5,7 @@ import com.badlogic.gdx.audio.Music;
 
 public enum MusicAsset implements Asset <Music>{
 
-    MAIN_MENU_MUSIC("mainMenuMusic.wav");
+    MAIN_MENU_MUSIC("mainMenuMusic");
 
     private final AssetDescriptor<Music> descriptor;
 

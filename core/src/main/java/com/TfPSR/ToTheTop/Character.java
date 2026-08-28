@@ -1,4 +1,4 @@
-package com.TfPSR.CucoProject;
+package com.TfPSR.ToTheTop;
 
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.Vector2;
