@@ -42,4 +42,14 @@ public class GameInputProcessor extends InputAdapter {
 
         return false;
     }
+
+    @Override
+    public boolean keyDown(int keycode){
+        if(keycode == Input.Keys.SPACE){
+            player.onSpacePressed();
+            return true;
+        }
+
+        return false;
+    }
 }
