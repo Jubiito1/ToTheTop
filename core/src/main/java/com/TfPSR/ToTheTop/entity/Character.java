@@ -135,29 +135,8 @@ public class Character {
         spriteRightLeg.draw(batch);
         spriteTorso.draw(batch);
     }
-    public void onLeftClickPressed(Vector2 mousePosition) {
 
-        if(leftArm.getState() == ArmStates.GRABBING) {
-            leftArm.release(world);
-        }
 
-        leftArm.startDragging(mousePosition);
-        leftHandFollowingMouse = true;
-    }
-
-    public void onLeftClickReleased() {
-        leftHandFollowingMouse = false;
-        /*
-        if(leftArm.getCurrentGripPoint() != null) {
-            leftArm.grab(world);
-        }
-         */
-    }
-
-    public void onRightClickPressed(Vector2 mousePosition) {
-
-        if(rightArm.getState() == ArmStates.GRABBING) {
-            rightArm.release(world);
     public void update(Vector2 mouseVelocity, boolean leftMousePressed, boolean rightMousePressed) {
         if (leftMousePressed) {
             applyInternalArmForce(leftArm, mouseVelocity);
