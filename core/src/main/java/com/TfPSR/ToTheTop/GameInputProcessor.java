@@ -1,4 +1,4 @@
-package com.TfPSR.CucoProject;
+package com.TfPSR.ToTheTop;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
@@ -37,6 +37,16 @@ public class GameInputProcessor extends InputAdapter {
 
         if(button == Input.Buttons.RIGHT) {
             player.onRightClickReleased();
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean keyDown(int keycode){
+        if(keycode == Input.Keys.SPACE){
+            player.onSpacePressed();
             return true;
         }
 

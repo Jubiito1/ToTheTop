@@ -1,5 +1,6 @@
-package com.TfPSR.CucoProject;
+package com.TfPSR.ToTheTop;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -7,6 +8,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.physics.box2d.joints.RevoluteJoint;
 
 public class Character {
+    private final Sound dash;
     private static final float HEAD_WIDTH_RATIO = 0.28f;
     private static final float HEAD_HEIGHT_RATIO = 0.13f;
 
@@ -40,7 +42,7 @@ public class Character {
 
     private final short groupIndex = -1;
 
-    public Character(Vector2 position, Vector2 size, float weight, World world) {
+    public Character(Vector2 position, Vector2 size, float weight, World world, Sound dash) {
 
         Vector2 headSize = new Vector2(size.x * HEAD_WIDTH_RATIO, size.y * HEAD_HEIGHT_RATIO);
         Vector2 torsoSize = new Vector2(size.x * CHEST_WIDTH_RATIO, size.y * CHEST_HEIGHT_RATIO);
@@ -92,6 +94,8 @@ public class Character {
         RevoluteJoint rightShoulderJoint = JointFactory.createRevoluteJoint(torso, rightArm.getUpperArm(), false, rightShoulderAnchor, rightArm.getShoulderAnchor(), world, 0f, 180f);
         RevoluteJoint leftLegJoint = JointFactory.createRevoluteJoint(torso, leftLeg, false, leftTorsoHipAnchor, leftLegHipAnchor, world, -90, 90);
         RevoluteJoint rightLegJoint = JointFactory.createRevoluteJoint(torso, rightLeg, false, rightTorsoHipAnchor, rightLegHipAnchor, world, -90, 90);
+
+        this.dash = dash;
     }
 
     public void onLeftClickPressed() {
@@ -129,6 +133,10 @@ public class Character {
             rightArm.grab(world);
         }
         */
+    }
+
+    public void onSpacePressed(){
+        dash.play();
     }
 
     public void update(Vector2 mousePosition, World world) {
