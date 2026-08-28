@@ -17,7 +17,7 @@ public class Arm {
     private static final float FOREARM_MASS_RATIO = 0.02f;
     private static final float HAND_MASS_RATIO = 0.01f;
 
-    private static final float MOUSE_SENSITIVITY = 1f;
+    private static final float MOUSE_SENSITIVITY = 0.1f;
     private static final float VELOCITY_GAIN = 50f;
     private static final float MAX_CONTROL_FORCE = 100f;
 
@@ -66,12 +66,12 @@ public class Arm {
         Vector2 handWristAnchor = new Vector2(0, (handSize.y / 2));
 
         if (side == Sides.LEFT) {
-            this.shoulderAnchor = new Vector2((armSize.x / 2), (armSize.y / 2) - (size.x / 2));
-            RevoluteJoint elbowJoint = JointFactory.createRevoluteJoint(upperArm, forearm, false, armElbowAnchor, forearmElbowAnchor, world, -160, 0);
+            this.shoulderAnchor = new Vector2(0, (armSize.y / 2) - (size.x / 2));
+            RevoluteJoint elbowJoint = JointFactory.createRevoluteJoint(upperArm, forearm, false, armElbowAnchor, forearmElbowAnchor, world);
             RevoluteJoint wristAnchor = JointFactory.createRevoluteJoint(forearm, hand, false, forearmWristAnchor, handWristAnchor, world, -45, 45);
         } else {
-            this.shoulderAnchor = new Vector2(-(armSize.x / 2), (armSize.y / 2) - (size.x / 2));
-            RevoluteJoint elbowJoint = JointFactory.createRevoluteJoint(upperArm, forearm, false, armElbowAnchor, forearmElbowAnchor, world, 0, 160);
+            this.shoulderAnchor = new Vector2(0, (armSize.y / 2) - (size.x / 2));
+            RevoluteJoint elbowJoint = JointFactory.createRevoluteJoint(upperArm, forearm, false, armElbowAnchor, forearmElbowAnchor, world);
             RevoluteJoint wristAnchor = JointFactory.createRevoluteJoint(forearm, hand, false, forearmWristAnchor, handWristAnchor, world, -45, 45);
         }
 

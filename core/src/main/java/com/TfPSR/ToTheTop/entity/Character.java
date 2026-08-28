@@ -82,16 +82,16 @@ public class Character {
 
         Vector2 torsoNeckAnchor = new Vector2(0, (torsoSize.y / 2));
         Vector2 headNeckAnchor = new Vector2(0, - (headSize.y / 2));
-        Vector2 leftShoulderAnchor = new Vector2( - (torsoSize.x / 2), (torsoSize.y / 2) - (armsSize.x / 2));
-        Vector2 rightShoulderAnchor = new Vector2((torsoSize.x / 2), (torsoSize.y / 2) - (armsSize.x / 2));
+        Vector2 leftShoulderAnchor = new Vector2( - (torsoSize.x / 1.5f), (torsoSize.y / 2) - (armsSize.x / 2));
+        Vector2 rightShoulderAnchor = new Vector2((torsoSize.x / 1.5f), (torsoSize.y / 2) - (armsSize.x / 2));
         Vector2 leftTorsoHipAnchor = new Vector2( - (torsoSize.x / 2) + (legsSize.x / 2), - (torsoSize.y / 2));
         Vector2 leftLegHipAnchor = new Vector2(0, (legsSize.y / 2));
         Vector2 rightTorsoHipAnchor = new Vector2((torsoSize.x / 2) - (legsSize.x / 2), - (torsoSize.y / 2));
         Vector2 rightLegHipAnchor = new Vector2(0, (legsSize.y / 2));
 
         RevoluteJoint neckJoint = JointFactory.createRevoluteJoint(torso, head, false, torsoNeckAnchor, headNeckAnchor, world, -45, 45);
-        RevoluteJoint leftShoulderJoint = JointFactory.createRevoluteJoint(torso, leftArm.getUpperArm(), false, leftShoulderAnchor, leftArm.getShoulderAnchor(), world, -180f, 0f);
-        RevoluteJoint rightShoulderJoint = JointFactory.createRevoluteJoint(torso, rightArm.getUpperArm(), false, rightShoulderAnchor, rightArm.getShoulderAnchor(), world, 0f, 180f);
+        RevoluteJoint leftShoulderJoint = JointFactory.createRevoluteJoint(torso, leftArm.getUpperArm(), false, leftShoulderAnchor, leftArm.getShoulderAnchor(), world);
+        RevoluteJoint rightShoulderJoint = JointFactory.createRevoluteJoint(torso, rightArm.getUpperArm(), false, rightShoulderAnchor, rightArm.getShoulderAnchor(), world);
         RevoluteJoint leftLegJoint = JointFactory.createRevoluteJoint(torso, leftLeg, false, leftTorsoHipAnchor, leftLegHipAnchor, world, -90, 90);
         RevoluteJoint rightLegJoint = JointFactory.createRevoluteJoint(torso, rightLeg, false, rightTorsoHipAnchor, rightLegHipAnchor, world, -90, 90);
     }
@@ -104,5 +104,9 @@ public class Character {
         if (rightMousePressed) {
             rightArm.update(mouseVelocity);
         }
+    }
+
+    public Vector2 getPosition() {
+        return head.getPosition();
     }
 }

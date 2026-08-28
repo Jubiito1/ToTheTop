@@ -75,8 +75,8 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void update(float delta) {
-        camera.position.set(20, 10, 0);
-        camera.zoom = 2f;
+        camera.position.set(player.getPosition().x, player.getPosition().y, 0);
+        camera.zoom = 1.5f;
         camera.update();
 
         Vector2 mouseVelocity = getMouseVelocity(delta);
