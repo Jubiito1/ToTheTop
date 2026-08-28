@@ -1,0 +1,158 @@
+package com.TfPSR.ToTheTop.screen;
+
+import com.TfPSR.ToTheTop.GameScreen;
+import com.TfPSR.ToTheTop.Main;
+import com.TfPSR.ToTheTop.asset.AssetService;
+import com.TfPSR.ToTheTop.asset.MusicAsset;
+import com.TfPSR.ToTheTop.asset.TextureAsset;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.NinePatch;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Color;
+
+public class MainMenu extends ScreenAdapter {
+    private final Main game;
+    private final AssetService assetService;
+    private final Texture mainMenuImage;
+    private final Viewport viewport;
+    private final Music mainMenuMusic;
+    private final OrthographicCamera camera;
+    private final Batch batch;
+    private final Stage stage;
+    private final TextButton.TextButtonStyle textButtonStyle;
+    private final TextButton singlePlayerButton;
+    private final TextButton multipPlayerButton;
+    private final TextButton settingsButton;
+    private final Skin skin;
+    private final Table tablePlay;
+    private final Table settingsTable;
+
+    public MainMenu(Main game, AssetService assetService){
+        this.game = game;
+        this.viewport = game.getViewport();
+        this.assetService = assetService;
+        this.mainMenuMusic = assetService.get(MusicAsset.MAIN_MENU_MUSIC);
+        this.mainMenuMusic.setLooping(true);
+        this.mainMenuImage = assetService.get(TextureAsset.BACKGROUND_IMAGE);
+        this.batch = game.getBatch();
+        this.camera = game.getCamera();
+        this.stage = new Stage(new ScreenViewport());
+        this.skin = new Skin();
+        this.tablePlay = new Table();
+        this.settingsTable = new Table();
+
+        int size = 20, borderThickness = 2;
+        Pixmap pixmapButton = new Pixmap(size, size, Pixmap.Format.RGB888);
+        pixmapButton.setColor(Color.DARK_GRAY);
+        pixmapButton.fill();
+        pixmapButton.setColor(Color.GRAY);
+        pixmapButton.fillRectangle(borderThickness, borderThickness, size - (borderThickness *2), size - (borderThickness * 2));
+        skin.add("darkGray", new Texture(pixmapButton));
+        pixmapButton.dispose();
+
+        NinePatch button = new NinePatch(skin.getRegion("darkGray"), borderThickness, borderThickness, borderThickness, borderThickness);
+        NinePatchDrawable buttonDrawable = new NinePatchDrawable(button);
+        buttonDrawable.setPadding(6, 12, 6, 12);
+
+        BitmapFont buttonFont = new BitmapFont();
+        skin.add("buttonFount", buttonFont);
+
+        this.textButtonStyle = new TextButton.TextButtonStyle();
+        textButtonStyle.up = buttonDrawable.tint(Color.WHITE);
+        textButtonStyle.over = buttonDrawable.tint( Color.LIGHT_GRAY);
+        textButtonStyle.down = buttonDrawable.tint(new Color(0.6f, 0.6f, 0.6f,1));
+        textButtonStyle.font = skin.getFont("buttonFount");
+        skin.add("default", textButtonStyle);
+
+        this.singlePlayerButton = new TextButton("Singleplayer",skin);
+        this.multipPlayerButton = new TextButton("Multiplayer", skin);
+        this.settingsButton = new TextButton("Settings", skin);
+
+        singlePlayerButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                game.addScreen(new GameScreen(game, assetService));
+                game.setScreen(GameScreen.class);
+            }
+        });
+
+
+        multipPlayerButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+//              game.addScreen(new GameScreen(game, assetService));
+//              game.setScreen(GameScreen.class);
+              System.out.println("Modalidad no implementada");
+            }
+        });
+
+        settingsButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+//              game.addScreen(new SettingsScreen(game, assetService));
+//                game.setScreen(settingsScreen.class);
+              System.out.println("Modaolidad no implementada");
+            }
+        });
+
+        tablePlay.setFillParent(true);
+        stage.addActor(tablePlay);
+
+        tablePlay.add(singlePlayerButton).width(250).height(60).padTop(600);
+
+        tablePlay.add(multipPlayerButton).width(250).height(60).padLeft(100).padTop(600);
+
+        settingsTable.setFillParent(true);
+        stage.addActor(settingsTable);
+        settingsTable.top().right();
+        settingsTable.add(settingsButton).width(250).height(60).padRight(30).padTop(20);
+    }
+
+    @Override
+    public void show() {
+        mainMenuMusic.play();
+        Gdx.input.setInputProcessor(stage);
+    }
+
+    @Override
+    public void render(float delta){
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        camera.update();
+        batch.setProjectionMatrix(camera.combined);
+
+        batch.begin();
+        batch.draw(mainMenuImage, 0, 0, viewport.getWorldWidth(), viewport.getWorldHeight() );
+        batch.end();
+
+        stage.act(delta);
+        stage.draw();
+
+    }
+
+    @Override
+    public void resize(int width, int height){
+        stage.getViewport().update(width, height, true);
+    }
+
+    @Override
+    public void hide(){
+        mainMenuMusic.stop();
+    }
+}
+//new Stage(new FitViewport(viewport.getWorldWidth(), viewport.getWorldHeight()))
