@@ -1,6 +1,7 @@
 package com.TfPSR.ToTheTop;
 
 import com.TfPSR.ToTheTop.core.GameScreen;
+import com.TfPSR.ToTheTop.menu.MainMenu;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -28,8 +29,8 @@ public class Main extends Game { //We use Game, because it has better methods of
         this.batch = new SpriteBatch();
         this.camera = new OrthographicCamera();
         this.viewport = new FitViewport(MAX_WIDTH, MAX_HEIGHT, camera);
-        addScreen(new GameScreen(this));
-        setScreen(GameScreen.class);
+        addScreen(new MainMenu(this));
+        setScreen(MainMenu.class);
     }
 
     @Override
