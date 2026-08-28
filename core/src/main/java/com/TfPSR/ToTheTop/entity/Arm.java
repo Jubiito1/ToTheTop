@@ -19,7 +19,7 @@ public class Arm {
 
     private static final float MOUSE_SENSITIVITY = 0.1f;
     private static final float VELOCITY_GAIN = 50f;
-    private static final float MAX_CONTROL_FORCE = 100f;
+    private static final float MAX_CONTROL_FORCE = 10000f;
 
     private final Body hand;
     private final Body forearm;
@@ -86,17 +86,25 @@ public class Arm {
         return shoulderAnchor;
     }
 
-    public void update(Vector2 mouseVelocity) {
+    public Vector2 update(Vector2 mouseVelocity) {
         targetVelocity.set(mouseVelocity).scl(MOUSE_SENSITIVITY);
 
-        velocityError.set(targetVelocity).sub(hand.getLinearVelocity());
+        velocityError
+            .set(targetVelocity)
+            .sub(hand.getLinearVelocity());
 
-        controlForce.set(velocityError).scl(VELOCITY_GAIN);
+        controlForce
+            .set(velocityError)
+            .scl(VELOCITY_GAIN);
 
         if (controlForce.len() > MAX_CONTROL_FORCE) {
             controlForce.setLength(MAX_CONTROL_FORCE);
         }
 
-        hand.applyForceToCenter(controlForce, true);
+        return controlForce;
+    }
+
+    public Body getHand() {
+        return hand;
     }
 }

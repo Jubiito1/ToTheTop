@@ -98,12 +98,24 @@ public class Character {
 
     public void update(Vector2 mouseVelocity, boolean leftMousePressed, boolean rightMousePressed) {
         if (leftMousePressed) {
-            leftArm.update(mouseVelocity);
+            applyInternalArmForce(leftArm, mouseVelocity);
         }
 
         if (rightMousePressed) {
-            rightArm.update(mouseVelocity);
+            applyInternalArmForce(rightArm, mouseVelocity);
         }
+    }
+
+    private void applyInternalArmForce(Arm arm, Vector2 mouseVelocity) {
+        Vector2 force = arm.update(mouseVelocity);
+
+        arm.getHand().applyForceToCenter(force, true);
+
+        torso.applyForceToCenter(
+            force.x * -1f,
+            force.y * -1f,
+            true
+        );
     }
 
     public Vector2 getPosition() {
