@@ -1,6 +1,8 @@
 package com.TfPSR.ToTheTop.core;
 
 import com.TfPSR.ToTheTop.*;
+import com.TfPSR.ToTheTop.asset.AssetService;
+import com.TfPSR.ToTheTop.asset.SoundAsset;
 import com.TfPSR.ToTheTop.entity.Character;
 import com.TfPSR.ToTheTop.input.GameInputProcessor;
 import com.TfPSR.ToTheTop.map.GameMap;
@@ -8,6 +10,7 @@ import com.TfPSR.ToTheTop.map.Rocks;
 import com.TfPSR.ToTheTop.physics.GameContactListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -35,11 +38,16 @@ public class GameScreen extends ScreenAdapter {
 
     private final Rocks rocks;
 
-    public GameScreen(Main game) {
+    private final AssetService assetService;
+    private final Sound dash;
+
+    public GameScreen(Main game, AssetService assetService) {
         this.game = game;
         this.viewport = game.getViewport();
         this.camera = game.getCamera();
         this.batch = game.getBatch();
+        this.assetService = assetService;
+        this.dash = assetService.get(SoundAsset.DASH);
         this.debugRenderer = new Box2DDebugRenderer();
         map = new GameMap("maps/map.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map.getTiledMap(), 1f / Constants.PIXELS_PER_METER);
@@ -49,7 +57,7 @@ public class GameScreen extends ScreenAdapter {
 
         rocks = new Rocks(map.getSurfaceObjects(), world);
 
-        player = new Character( map.getPlayerSpawn(), new Vector2(0.6f, 1.80f), 80f, world);
+        player = new Character( map.getPlayerSpawn(), new Vector2(0.6f, 1.80f), 80f, world, dash);
 
         Gdx.input.setInputProcessor(
             new GameInputProcessor()
