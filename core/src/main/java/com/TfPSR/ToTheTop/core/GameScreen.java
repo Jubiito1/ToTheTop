@@ -85,9 +85,13 @@ public class GameScreen extends ScreenAdapter {
     private void draw() {
         mapRenderer.setView(camera);
         mapRenderer.render();
+        batch.begin();
+        player.draw(batch);
+        rocks.draw(batch);
 
         batch.setProjectionMatrix(camera.combined);
         debugRenderer.render(world, camera.combined);
+        batch.end();
     }
 
     private void update(float delta) {
