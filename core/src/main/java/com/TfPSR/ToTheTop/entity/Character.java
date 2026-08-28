@@ -2,6 +2,7 @@ package com.TfPSR.ToTheTop.entity;
 
 import com.TfPSR.ToTheTop.physics.JointFactory;
 import com.TfPSR.ToTheTop.physics.ShapeFactory;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -39,12 +40,9 @@ public class Character {
     private final Body leftLeg;
     private final Body rightLeg;
 
-    private boolean leftHandFollowingMouse;
-    private boolean rightHandFollowingMouse;
-
     private final short groupIndex = -1;
 
-    public Character(Vector2 position, Vector2 size, float weight, World world) {
+    public Character(Vector2 position, Vector2 size, float weight, World world, Sound dash) {
         this.position = position;
 
         Vector2 headSize = new Vector2(size.x * HEAD_WIDTH_RATIO, size.y * HEAD_HEIGHT_RATIO);
