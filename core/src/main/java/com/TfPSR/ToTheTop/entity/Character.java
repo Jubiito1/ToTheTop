@@ -19,7 +19,6 @@ public class Character {
     private Sprite spriteLeftLeg;
     private Sprite spriteRightLeg;
 
-
     private static final float HEAD_WIDTH_RATIO = 0.28f;
     private static final float HEAD_HEIGHT_RATIO = 0.13f;
 
@@ -130,6 +129,9 @@ public class Character {
         syncSpriteToBody(spriteLeftLeg, leftLeg);
         syncSpriteToBody(spriteRightLeg, rightLeg);
         syncSpriteToBody(spriteTorso, torso);
+
+        leftArm.draw(batch);
+        rightArm.draw(batch);
         spriteHead.draw(batch);
         spriteLeftLeg.draw(batch);
         spriteRightLeg.draw(batch);
