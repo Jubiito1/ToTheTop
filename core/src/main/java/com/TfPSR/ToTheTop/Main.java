@@ -1,7 +1,10 @@
 package com.TfPSR.ToTheTop;
 
+import com.TfPSR.ToTheTop.asset.AssetService;
+import com.TfPSR.ToTheTop.screen.LoadMenu;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -21,14 +24,17 @@ public class Main extends Game { //We use Game, because it has better methods of
     private Batch batch;
     private OrthographicCamera camera;
     private Viewport viewport;
+    public AssetService assetService;
 
     @Override
     public void create() {
         this.batch = new SpriteBatch();
         this.camera = new OrthographicCamera();
         this.viewport = new FitViewport(MAX_WIDTH, MAX_HEIGHT, camera);
-        addScreen(new GameScreen(this));
-        setScreen(GameScreen.class);
+        this.assetService = new AssetService(new InternalFileHandleResolver());
+
+        addScreen(new LoadMenu(this, assetService));
+        setScreen(LoadMenu.class);
     }
 
     @Override
