@@ -10,11 +10,8 @@ import com.TfPSR.ToTheTop.map.Rocks;
 import com.TfPSR.ToTheTop.physics.GameContactListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -38,6 +35,9 @@ public class GameScreen extends ScreenAdapter {
 
     private final Rocks rocks;
 
+    private final GameInputProcessor inputProcessor;
+
+    public GameScreen(Main game) {
     private final AssetService assetService;
     private final Sound dash;
 
@@ -59,27 +59,11 @@ public class GameScreen extends ScreenAdapter {
 
         player = new Character( map.getPlayerSpawn(), new Vector2(0.6f, 1.80f), 80f, world, dash);
 
-        Gdx.input.setInputProcessor(
-            new GameInputProcessor()
-        );
-
-        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-        Cursor invisibleCursor = Gdx.graphics.newCursor(pixmap, 0, 0);
+        inputProcessor = new GameInputProcessor();
+        Gdx.input.setInputProcessor(inputProcessor);
 
         Gdx.input.setCursorCatched(true);
-
-        pixmap.dispose();
     }
-
-    public Vector2 findMousePosition() {
-        Vector2 mousePosition = new Vector2(Gdx.input.getX(), Gdx.input.getY());
-
-        viewport.unproject(mousePosition);
-
-        return mousePosition;
-    }
-
-
 
     @Override
     public void render(float delta) {
@@ -93,16 +77,34 @@ public class GameScreen extends ScreenAdapter {
     private void draw() {
         mapRenderer.setView(camera);
         mapRenderer.render();
+        batch.begin();
+        player.draw(batch);
 
         batch.setProjectionMatrix(camera.combined);
         debugRenderer.render(world, camera.combined);
+        batch.end();
     }
 
     private void update(float delta) {
-        world.step(delta, 10, 4);
-        camera.position.set(20, 10, 0);
-        camera.zoom = 2f;
+        camera.position.set(player.getPosition().x, player.getPosition().y, 0);
+        camera.zoom = 1.5f;
         camera.update();
 
+        Vector2 mouseVelocity = getMouseVelocity(delta);
+        player.update(mouseVelocity, inputProcessor.isLeftMousePressed(), inputProcessor.isRightMousePressed());
+
+        world.step(delta, 10, 4);
+    }
+
+    private Vector2 getMouseVelocity(float delta) {
+        Vector2 mouseDelta = inputProcessor.getMouseDelta();
+
+        float worldWidth = viewport.getWorldWidth() * camera.zoom;
+        float worldHeight = viewport.getWorldHeight() * camera.zoom;
+
+        float velocityX = (mouseDelta.x / viewport.getScreenWidth()) * worldWidth / delta;
+        float velocityY = -(mouseDelta.y / viewport.getScreenHeight()) * worldHeight / delta;
+
+        return new Vector2(velocityX, velocityY);
     }
 }

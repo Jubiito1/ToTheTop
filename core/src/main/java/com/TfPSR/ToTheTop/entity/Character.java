@@ -2,7 +2,10 @@ package com.TfPSR.ToTheTop.entity;
 
 import com.TfPSR.ToTheTop.physics.JointFactory;
 import com.TfPSR.ToTheTop.physics.ShapeFactory;
-import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -10,6 +13,12 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.physics.box2d.joints.RevoluteJoint;
 
 public class Character {
+
+    private Sprite spriteHead;
+    private Sprite spriteTorso;
+    private Sprite spriteLeftLeg;
+    private Sprite spriteRightLeg;
+
     private static final float HEAD_WIDTH_RATIO = 0.28f;
     private static final float HEAD_HEIGHT_RATIO = 0.13f;
 
@@ -83,17 +92,76 @@ public class Character {
 
         Vector2 torsoNeckAnchor = new Vector2(0, (torsoSize.y / 2));
         Vector2 headNeckAnchor = new Vector2(0, - (headSize.y / 2));
-        Vector2 leftShoulderAnchor = new Vector2( - (torsoSize.x / 2), (torsoSize.y / 2) - (armsSize.x / 2));
-        Vector2 rightShoulderAnchor = new Vector2((torsoSize.x / 2), (torsoSize.y / 2) - (armsSize.x / 2));
+        Vector2 leftShoulderAnchor = new Vector2( - (torsoSize.x / 1.5f), (torsoSize.y / 2) - (armsSize.x / 2));
+        Vector2 rightShoulderAnchor = new Vector2((torsoSize.x / 1.5f), (torsoSize.y / 2) - (armsSize.x / 2));
         Vector2 leftTorsoHipAnchor = new Vector2( - (torsoSize.x / 2) + (legsSize.x / 2), - (torsoSize.y / 2));
         Vector2 leftLegHipAnchor = new Vector2(0, (legsSize.y / 2));
         Vector2 rightTorsoHipAnchor = new Vector2((torsoSize.x / 2) - (legsSize.x / 2), - (torsoSize.y / 2));
         Vector2 rightLegHipAnchor = new Vector2(0, (legsSize.y / 2));
 
         RevoluteJoint neckJoint = JointFactory.createRevoluteJoint(torso, head, false, torsoNeckAnchor, headNeckAnchor, world, -45, 45);
-        RevoluteJoint leftShoulderJoint = JointFactory.createRevoluteJoint(torso, leftArm.getUpperArm(), false, leftShoulderAnchor, leftArm.getShoulderAnchor(), world, -180f, 0f);
-        RevoluteJoint rightShoulderJoint = JointFactory.createRevoluteJoint(torso, rightArm.getUpperArm(), false, rightShoulderAnchor, rightArm.getShoulderAnchor(), world, 0f, 180f);
+        RevoluteJoint leftShoulderJoint = JointFactory.createRevoluteJoint(torso, leftArm.getUpperArm(), false, leftShoulderAnchor, leftArm.getShoulderAnchor(), world);
+        RevoluteJoint rightShoulderJoint = JointFactory.createRevoluteJoint(torso, rightArm.getUpperArm(), false, rightShoulderAnchor, rightArm.getShoulderAnchor(), world);
         RevoluteJoint leftLegJoint = JointFactory.createRevoluteJoint(torso, leftLeg, false, leftTorsoHipAnchor, leftLegHipAnchor, world, -90, 90);
         RevoluteJoint rightLegJoint = JointFactory.createRevoluteJoint(torso, rightLeg, false, rightTorsoHipAnchor, rightLegHipAnchor, world, -90, 90);
+        this.spriteHead = createBodyPartSprite(headSize.x, headSize.y, "sprites/head.png");
+        this.spriteTorso= createBodyPartSprite(torsoSize.x, torsoSize.y, "sprites/torso.png");
+        this.spriteLeftLeg= createBodyPartSprite(legsSize.x, legsSize.y, "sprites/leg.png");
+        this.spriteRightLeg= createBodyPartSprite(legsSize.x, legsSize.y, "sprites/leg.png");
+    }
+
+    private Sprite createBodyPartSprite(float width, float height, String spritePath) {
+        Texture texture = new Texture(Gdx.files.internal(spritePath));
+        Sprite sprite = new Sprite(texture);
+        sprite.setSize(width, height);
+        sprite.setOrigin(width/2f, height/2f);
+
+        return sprite;
+    }
+    private void syncSpriteToBody(Sprite sprite, Body body) {
+        Vector2 pos = body.getPosition(); // centro del body en Box2D
+        sprite.setPosition(pos.x - sprite.getWidth() / 2f, pos.y - sprite.getHeight() / 2f);
+        sprite.setRotation((float) Math.toDegrees(body.getAngle()));
+    }
+
+    public void draw(Batch batch) {
+        syncSpriteToBody(spriteHead, head);
+        syncSpriteToBody(spriteLeftLeg, leftLeg);
+        syncSpriteToBody(spriteRightLeg, rightLeg);
+        syncSpriteToBody(spriteTorso, torso);
+
+        leftArm.draw(batch);
+        rightArm.draw(batch);
+        spriteHead.draw(batch);
+        spriteLeftLeg.draw(batch);
+        spriteRightLeg.draw(batch);
+        spriteTorso.draw(batch);
+    }
+
+
+    public void update(Vector2 mouseVelocity, boolean leftMousePressed, boolean rightMousePressed) {
+        if (leftMousePressed) {
+            applyInternalArmForce(leftArm, mouseVelocity);
+        }
+
+        if (rightMousePressed) {
+            applyInternalArmForce(rightArm, mouseVelocity);
+        }
+    }
+
+    private void applyInternalArmForce(Arm arm, Vector2 mouseVelocity) {
+        Vector2 force = arm.update(mouseVelocity);
+
+        arm.getHand().applyForceToCenter(force, true);
+
+        torso.applyForceToCenter(
+            force.x * -1f,
+            force.y * -1f,
+            true
+        );
+    }
+
+    public Vector2 getPosition() {
+        return head.getPosition();
     }
 }

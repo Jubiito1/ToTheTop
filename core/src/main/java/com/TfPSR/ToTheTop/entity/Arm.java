@@ -2,6 +2,10 @@ package com.TfPSR.ToTheTop.entity;
 
 import com.TfPSR.ToTheTop.physics.JointFactory;
 import com.TfPSR.ToTheTop.physics.ShapeFactory;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -9,6 +13,10 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.physics.box2d.joints.RevoluteJoint;
 
 public class Arm {
+    private Sprite spriteUpperArm;
+    private Sprite spriteForearm;
+    private Sprite spriteHand;
+
     private static final float ARM_HEIGHT_RATIO = 0.47f;
     private static final float FOREARM_HEIGHT_RATIO = 0.4f;
     private static final float HAND_HEIGHT_RATIO = 0.13f;
@@ -17,10 +25,18 @@ public class Arm {
     private static final float FOREARM_MASS_RATIO = 0.02f;
     private static final float HAND_MASS_RATIO = 0.01f;
 
+    private static final float MOUSE_SENSITIVITY = 0.1f;
+    private static final float VELOCITY_GAIN = 50f;
+    private static final float MAX_CONTROL_FORCE = 10000f;
+
     private final Body hand;
     private final Body forearm;
     private final Body upperArm;
     private final Vector2 shoulderAnchor;
+
+    private final Vector2 targetVelocity = new Vector2();
+    private final Vector2 velocityError = new Vector2();
+    private final Vector2 controlForce = new Vector2();
 
     public Arm(Vector2 position, Vector2 size, float angle, BodyDef.BodyType type, World world, float weight, float friction, float restitution, short groupIndex, Sides side) {
 
@@ -58,16 +74,43 @@ public class Arm {
         Vector2 handWristAnchor = new Vector2(0, (handSize.y / 2));
 
         if (side == Sides.LEFT) {
-            this.shoulderAnchor = new Vector2((armSize.x / 2), (armSize.y / 2) - (size.x / 2));
-            RevoluteJoint elbowJoint = JointFactory.createRevoluteJoint(upperArm, forearm, false, armElbowAnchor, forearmElbowAnchor, world, -160, 0);
+            this.shoulderAnchor = new Vector2(0, (armSize.y / 2) - (size.x / 2));
+            RevoluteJoint elbowJoint = JointFactory.createRevoluteJoint(upperArm, forearm, false, armElbowAnchor, forearmElbowAnchor, world);
             RevoluteJoint wristAnchor = JointFactory.createRevoluteJoint(forearm, hand, false, forearmWristAnchor, handWristAnchor, world, -45, 45);
         } else {
-            this.shoulderAnchor = new Vector2(-(armSize.x / 2), (armSize.y / 2) - (size.x / 2));
-            RevoluteJoint elbowJoint = JointFactory.createRevoluteJoint(upperArm, forearm, false, armElbowAnchor, forearmElbowAnchor, world, 0, 160);
+            this.shoulderAnchor = new Vector2(0, (armSize.y / 2) - (size.x / 2));
+            RevoluteJoint elbowJoint = JointFactory.createRevoluteJoint(upperArm, forearm, false, armElbowAnchor, forearmElbowAnchor, world);
             RevoluteJoint wristAnchor = JointFactory.createRevoluteJoint(forearm, hand, false, forearmWristAnchor, handWristAnchor, world, -45, 45);
         }
 
+        this.spriteUpperArm = createBodyPartSprite(armSize.x, armSize.y, "sprites/arm.png");
+        this.spriteForearm = createBodyPartSprite(forearmSize.x, forearmSize.y, "sprites/forearm.png");
+        this.spriteHand = createBodyPartSprite(handSize.x, handSize.y, "sprites/hand.png");
 
+    }
+
+    private Sprite createBodyPartSprite(float width, float height, String spritePath) {
+        Texture texture = new Texture(Gdx.files.internal(spritePath));
+        Sprite sprite = new Sprite(texture);
+        sprite.setSize(width, height);
+        sprite.setOrigin(width/2f, height/2f);
+        return sprite;
+    }
+
+    private void syncSpriteToBody(Sprite sprite, Body body) {
+        Vector2 pos = body.getPosition();
+        sprite.setPosition(pos.x - sprite.getWidth() / 2f, pos.y - sprite.getHeight() / 2f);
+        sprite.setRotation((float) Math.toDegrees(body.getAngle()));
+    }
+
+    public void draw(Batch batch) {
+        syncSpriteToBody(spriteUpperArm, upperArm);
+        syncSpriteToBody(spriteForearm, forearm);
+        syncSpriteToBody(spriteHand, hand);
+
+        spriteUpperArm.draw(batch);
+        spriteForearm.draw(batch);
+        spriteHand.draw(batch);
     }
 
     public Body getUpperArm() {
@@ -78,4 +121,26 @@ public class Arm {
         return shoulderAnchor;
     }
 
+    public Vector2 update(Vector2 mouseVelocity) {
+        targetVelocity.set(mouseVelocity).scl(MOUSE_SENSITIVITY);
+
+        velocityError
+            .set(targetVelocity)
+            .sub(hand.getLinearVelocity());
+
+        controlForce
+            .set(velocityError)
+            .scl(VELOCITY_GAIN);
+
+        if (controlForce.len() > MAX_CONTROL_FORCE) {
+            controlForce.setLength(MAX_CONTROL_FORCE);
+        }
+
+        return controlForce;
+    }
+
+    public Body getHand() {
+        return hand;
+    }
 }
+

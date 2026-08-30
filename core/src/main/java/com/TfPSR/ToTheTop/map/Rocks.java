@@ -2,6 +2,8 @@ package com.TfPSR.ToTheTop.map;
 
 import com.TfPSR.ToTheTop.core.Constants;
 import com.TfPSR.ToTheTop.physics.ShapeFactory;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.objects.PolygonMapObject;
@@ -14,7 +16,6 @@ import java.util.ArrayList;
 
 public class Rocks {
     ArrayList<Body> rocksBodies = new ArrayList<>();
-
 
     public Rocks(MapObjects rocksObjects, World world) {
         for(MapObject rock : rocksObjects) {
@@ -29,7 +30,6 @@ public class Rocks {
             Body body = ShapeFactory.createClosedChain(vertices, BodyDef.BodyType.StaticBody, world, 0, 1f, 0f, false, (short) -2);
             rocksBodies.add(body);
         }
-
-
     }
+
 }
