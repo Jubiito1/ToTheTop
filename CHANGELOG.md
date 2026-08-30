@@ -28,12 +28,14 @@ to Semantic Versioning.
 - Added main menu music.
 - Added dash sound effect.
 - Added initial screen management system.
+- Added initial Tiled map rendering with a test map and rock objects.
 
 ### Changed
 - Renamed the main Java package from `com.TfPSR.CucoProject` to `com.TfPSR.ToTheTop`.
 - Renamed the project package structure accordingly across the `core` and `lwjgl3` modules.
 - Reworked the project launcher to use the new `ToTheTop` package.
 - Replaced the previous direct game startup flow with a screen-based architecture.
+- Reorganized classes into functional packages (`entity`, `input`, `map`, `physics`, `asset`, `screen`).
 - Updated the game to use a shared `Main` instance for screen and rendering management.
 - Updated the character implementation to support sound effects.
 - Updated the asset loading system to use file extensions required by LibGDX loaders.
@@ -43,10 +45,13 @@ to Semantic Versioning.
 - Fixed music loading by specifying the `.ogg` file extension.
 - Fixed integration issues between the loading screen, main menu, asset service, and game screen.
 - Fixed package references after renaming the project.
+- Fixed hand dragging behavior in the character and input handling.
 
 ### Removed
 - Removed the old grip point system implementation.
 - Removed obsolete grab-point naming and references.
+- Removed all classes and methods related to the previous movement system.
+- Removed obsolete pre-refactor classes left in the root package.
 
 ---
 

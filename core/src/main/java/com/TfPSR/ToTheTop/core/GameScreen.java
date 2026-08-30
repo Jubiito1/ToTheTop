@@ -10,6 +10,7 @@ import com.TfPSR.ToTheTop.map.Rocks;
 import com.TfPSR.ToTheTop.physics.GameContactListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -32,14 +33,13 @@ public class GameScreen extends ScreenAdapter {
 
     private final GameMap map;
     private final OrthogonalTiledMapRenderer mapRenderer;
+    private final AssetService assetService;
+    private final Sound dash;
+
 
     private final Rocks rocks;
 
     private final GameInputProcessor inputProcessor;
-
-    public GameScreen(Main game) {
-    private final AssetService assetService;
-    private final Sound dash;
 
     public GameScreen(Main game, AssetService assetService) {
         this.game = game;

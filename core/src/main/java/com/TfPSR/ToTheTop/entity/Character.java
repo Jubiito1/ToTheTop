@@ -3,6 +3,7 @@ package com.TfPSR.ToTheTop.entity;
 import com.TfPSR.ToTheTop.physics.JointFactory;
 import com.TfPSR.ToTheTop.physics.ShapeFactory;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -109,6 +110,7 @@ public class Character {
         this.spriteLeftLeg= createBodyPartSprite(legsSize.x, legsSize.y, "sprites/leg.png");
         this.spriteRightLeg= createBodyPartSprite(legsSize.x, legsSize.y, "sprites/leg.png");
     }
+
 
     private Sprite createBodyPartSprite(float width, float height, String spritePath) {
         Texture texture = new Texture(Gdx.files.internal(spritePath));
