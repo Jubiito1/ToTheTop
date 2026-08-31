@@ -1,7 +1,7 @@
 package com.TfPSR.ToTheTop;
 
 import com.TfPSR.ToTheTop.asset.AssetService;
-import com.TfPSR.ToTheTop.screen.LoadMenu;
+import com.TfPSR.ToTheTop.menus.LoadMenu;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
