@@ -4,13 +4,16 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.Vector2;
+import com.TfPSR.ToTheTop.core.GameScreen;
 
 public class GameInputProcessor extends InputAdapter {
     private boolean leftMousePressed;
     private boolean rightMousePressed;
     private final Vector2 mouseDelta = new Vector2();
+    private final GameScreen gameScreen;
 
-    public GameInputProcessor() {
+    public GameInputProcessor(GameScreen gameScreen) {
+        this.gameScreen = gameScreen;
     }
 
     @Override
@@ -56,5 +59,17 @@ public class GameInputProcessor extends InputAdapter {
 
     public boolean isRightMousePressed() {
         return rightMousePressed;
+    }
+
+    @Override
+    public boolean keyDown(int keycode){
+        if(keycode == Input.Keys.ESCAPE){
+            gameScreen.pauseGame();
+            return true;
+        }
+
+        if(gameScreen.isPaused())
+            return true;
+        return true;
     }
 }

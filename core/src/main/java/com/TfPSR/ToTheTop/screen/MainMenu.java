@@ -51,7 +51,7 @@ public class MainMenu extends ScreenAdapter {
         this.batch = game.getBatch();
         this.camera = game.getCamera();
         this.stage = new Stage(new ScreenViewport());
-        this.skin = new Skin();
+        this.skin = assetService.getSkin();
         this.tablePlay = new Table();
         this.settingsTable = new Table();
 
@@ -126,13 +126,15 @@ public class MainMenu extends ScreenAdapter {
     public void show() {
         mainMenuMusic.play();
         Gdx.input.setInputProcessor(stage);
+        camera.position.set(viewport.getWorldWidth() / 2f, viewport.getWorldHeight() / 2f, 0);
+        camera.zoom = 1f;
+        camera.update();
     }
 
     @Override
     public void render(float delta){
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
         camera.update();
         batch.setProjectionMatrix(camera.combined);
 

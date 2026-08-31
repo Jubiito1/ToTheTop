@@ -8,7 +8,9 @@ import com.TfPSR.ToTheTop.input.GameInputProcessor;
 import com.TfPSR.ToTheTop.map.GameMap;
 import com.TfPSR.ToTheTop.map.Rocks;
 import com.TfPSR.ToTheTop.physics.GameContactListener;
+import com.TfPSR.ToTheTop.screen.PauseMenu;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
@@ -33,13 +35,16 @@ public class GameScreen extends ScreenAdapter {
 
     private final GameMap map;
     private final OrthogonalTiledMapRenderer mapRenderer;
+
     private final AssetService assetService;
     private final Sound dash;
-
+    private final InputMultiplexer inputMultiplexer;
 
     private final Rocks rocks;
 
     private final GameInputProcessor inputProcessor;
+    private boolean paused = false;
+    private final PauseMenu pauseMenu;
 
     public GameScreen(Main game, AssetService assetService) {
         this.game = game;
@@ -48,6 +53,9 @@ public class GameScreen extends ScreenAdapter {
         this.batch = game.getBatch();
         this.assetService = assetService;
         this.dash = assetService.get(SoundAsset.DASH);
+        this.inputMultiplexer = new InputMultiplexer();
+
+        this.pauseMenu = new PauseMenu(assetService, game, this);
         this.debugRenderer = new Box2DDebugRenderer();
         map = new GameMap("maps/map.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map.getTiledMap(), 1f / Constants.PIXELS_PER_METER);
@@ -59,8 +67,10 @@ public class GameScreen extends ScreenAdapter {
 
         player = new Character( map.getPlayerSpawn(), new Vector2(0.6f, 1.80f), 80f, world, dash);
 
-        inputProcessor = new GameInputProcessor();
-        Gdx.input.setInputProcessor(inputProcessor);
+        inputProcessor = new GameInputProcessor(this);
+        inputMultiplexer.addProcessor(inputProcessor);
+        inputMultiplexer.addProcessor(pauseMenu.getStage());
+        Gdx.input.setInputProcessor(inputMultiplexer);
 
         Gdx.input.setCursorCatched(true);
     }
@@ -70,7 +80,9 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        update(delta);
+        if(!paused)
+            update(delta);
+
         draw();
     }
 
@@ -83,6 +95,11 @@ public class GameScreen extends ScreenAdapter {
         batch.setProjectionMatrix(camera.combined);
         debugRenderer.render(world, camera.combined);
         batch.end();
+
+        if (paused) {
+            pauseMenu.getStage().act(Gdx.graphics.getDeltaTime());
+            pauseMenu.getStage().draw();
+        }
     }
 
     private void update(float delta) {
@@ -106,5 +123,20 @@ public class GameScreen extends ScreenAdapter {
         float velocityY = -(mouseDelta.y / viewport.getScreenHeight()) * worldHeight / delta;
 
         return new Vector2(velocityX, velocityY);
+    }
+
+    public boolean isPaused(){
+        return paused;
+    }
+
+    public void pauseGame(){
+        paused = true;
+        pauseMenu.open();
+    }
+
+    public void resumeGame(){
+        paused = false;
+        Gdx.input.setInputProcessor(inputMultiplexer);
+        pauseMenu.close();
     }
 }
