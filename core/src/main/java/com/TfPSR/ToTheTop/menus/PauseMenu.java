@@ -1,10 +1,9 @@
-package com.TfPSR.ToTheTop.screen;
+package com.TfPSR.ToTheTop.menus;
 
 import com.TfPSR.ToTheTop.Main;
 import com.TfPSR.ToTheTop.asset.AssetService;
 import com.TfPSR.ToTheTop.core.GameScreen;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -21,12 +20,14 @@ public class PauseMenu {
     private final TextButton settingsButton;
     private final TextButton mainMenuButton;
     private final Table table;
+    private final SettingsMenu settingsMenu;
 
-    public PauseMenu(AssetService assetService, Main game, GameScreen gameScreen){
+    public PauseMenu(AssetService assetService, Main game, GameScreen gameScreen, SettingsMenu settingsMenu){
         this.assetService = assetService;
         this.stage = new Stage(new ScreenViewport());
         this.skin = assetService.getSkin();
         this.table = new Table();
+        this.settingsMenu = settingsMenu;
 
         this.continueButton = new TextButton("Continue", skin);
         this.mainMenuButton = new TextButton("Main Menu", skin);
@@ -50,8 +51,10 @@ public class PauseMenu {
         settingsButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                settingsMenu.open(gameScreen.getInputMultiplexer());
             }
         });
+
 
         table.setFillParent(true);
         stage.addActor(table);
@@ -76,6 +79,8 @@ public class PauseMenu {
     public Stage getStage(){
         return stage;
     }
+
+
 
 
 }

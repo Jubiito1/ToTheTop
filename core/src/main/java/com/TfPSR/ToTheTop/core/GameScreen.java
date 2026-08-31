@@ -7,8 +7,9 @@ import com.TfPSR.ToTheTop.entity.Character;
 import com.TfPSR.ToTheTop.input.GameInputProcessor;
 import com.TfPSR.ToTheTop.map.GameMap;
 import com.TfPSR.ToTheTop.map.Rocks;
+import com.TfPSR.ToTheTop.menus.SettingsMenu;
 import com.TfPSR.ToTheTop.physics.GameContactListener;
-import com.TfPSR.ToTheTop.screen.PauseMenu;
+import com.TfPSR.ToTheTop.menus.PauseMenu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ScreenAdapter;
@@ -44,9 +45,10 @@ public class GameScreen extends ScreenAdapter {
 
     private final GameInputProcessor inputProcessor;
     private boolean paused = false;
+    private final SettingsMenu settingsMenu;
     private final PauseMenu pauseMenu;
 
-    public GameScreen(Main game, AssetService assetService) {
+    public GameScreen(Main game, AssetService assetService, SettingsMenu settingsMenu) {
         this.game = game;
         this.viewport = game.getViewport();
         this.camera = game.getCamera();
@@ -54,8 +56,9 @@ public class GameScreen extends ScreenAdapter {
         this.assetService = assetService;
         this.dash = assetService.get(SoundAsset.DASH);
         this.inputMultiplexer = new InputMultiplexer();
+        this.settingsMenu = settingsMenu;
+        this.pauseMenu = new PauseMenu(assetService, game, this, settingsMenu);
 
-        this.pauseMenu = new PauseMenu(assetService, game, this);
         this.debugRenderer = new Box2DDebugRenderer();
         map = new GameMap("maps/map.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map.getTiledMap(), 1f / Constants.PIXELS_PER_METER);
@@ -65,11 +68,11 @@ public class GameScreen extends ScreenAdapter {
 
         rocks = new Rocks(map.getSurfaceObjects(), world);
 
-        player = new Character( map.getPlayerSpawn(), new Vector2(0.6f, 1.80f), 80f, world, dash);
+        player = new Character( map.getPlayerSpawn(), new Vector2(0.6f, 1.80f), 80f, world);
 
         inputProcessor = new GameInputProcessor(this);
-        inputMultiplexer.addProcessor(inputProcessor);
         inputMultiplexer.addProcessor(pauseMenu.getStage());
+        inputMultiplexer.addProcessor(inputProcessor);
         Gdx.input.setInputProcessor(inputMultiplexer);
 
         Gdx.input.setCursorCatched(true);
@@ -86,6 +89,10 @@ public class GameScreen extends ScreenAdapter {
         draw();
     }
 
+    public InputMultiplexer getInputMultiplexer() {
+        return inputMultiplexer;
+    }
+
     private void draw() {
         mapRenderer.setView(camera);
         mapRenderer.render();
@@ -99,6 +106,8 @@ public class GameScreen extends ScreenAdapter {
         if (paused) {
             pauseMenu.getStage().act(Gdx.graphics.getDeltaTime());
             pauseMenu.getStage().draw();
+
+            settingsMenu.drawSettingsMenu(Gdx.graphics.getDeltaTime());
         }
     }
 

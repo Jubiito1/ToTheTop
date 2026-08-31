@@ -1,4 +1,4 @@
-package com.TfPSR.ToTheTop.screen;
+package com.TfPSR.ToTheTop.menus;
 
 import com.TfPSR.ToTheTop.core.GameScreen;
 import com.TfPSR.ToTheTop.Main;
@@ -23,6 +23,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Color;
+import org.w3c.dom.Text;
 
 public class MainMenu extends ScreenAdapter {
     private final Main game;
@@ -33,15 +34,15 @@ public class MainMenu extends ScreenAdapter {
     private final OrthographicCamera camera;
     private final Batch batch;
     private final Stage stage;
-    private final TextButton.TextButtonStyle textButtonStyle;
     private final TextButton singlePlayerButton;
     private final TextButton multipPlayerButton;
     private final TextButton settingsButton;
     private final Skin skin;
     private final Table tablePlay;
     private final Table settingsTable;
+    private final SettingsMenu settingsMenu;
 
-    public MainMenu(Main game, AssetService assetService){
+    public MainMenu(Main game, AssetService assetService, SettingsMenu settingsMenu){
         this.game = game;
         this.viewport = game.getViewport();
         this.assetService = assetService;
@@ -54,29 +55,7 @@ public class MainMenu extends ScreenAdapter {
         this.skin = assetService.getSkin();
         this.tablePlay = new Table();
         this.settingsTable = new Table();
-
-        int size = 20, borderThickness = 2;
-        Pixmap pixmapButton = new Pixmap(size, size, Pixmap.Format.RGB888);
-        pixmapButton.setColor(Color.DARK_GRAY);
-        pixmapButton.fill();
-        pixmapButton.setColor(Color.GRAY);
-        pixmapButton.fillRectangle(borderThickness, borderThickness, size - (borderThickness *2), size - (borderThickness * 2));
-        skin.add("darkGray", new Texture(pixmapButton));
-        pixmapButton.dispose();
-
-        NinePatch button = new NinePatch(skin.getRegion("darkGray"), borderThickness, borderThickness, borderThickness, borderThickness);
-        NinePatchDrawable buttonDrawable = new NinePatchDrawable(button);
-        buttonDrawable.setPadding(6, 12, 6, 12);
-
-        BitmapFont buttonFont = new BitmapFont();
-        skin.add("buttonFount", buttonFont);
-
-        this.textButtonStyle = new TextButton.TextButtonStyle();
-        textButtonStyle.up = buttonDrawable.tint(Color.WHITE);
-        textButtonStyle.over = buttonDrawable.tint( Color.LIGHT_GRAY);
-        textButtonStyle.down = buttonDrawable.tint(new Color(0.6f, 0.6f, 0.6f,1));
-        textButtonStyle.font = skin.getFont("buttonFount");
-        skin.add("default", textButtonStyle);
+        this.settingsMenu = settingsMenu;
 
         this.singlePlayerButton = new TextButton("Singleplayer",skin);
         this.multipPlayerButton = new TextButton("Multiplayer", skin);
@@ -85,7 +64,7 @@ public class MainMenu extends ScreenAdapter {
         singlePlayerButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.addScreen(new GameScreen(game, assetService));
+                game.addScreen(new GameScreen(game, assetService, settingsMenu));
                 game.setScreen(GameScreen.class);
             }
         });
@@ -103,9 +82,7 @@ public class MainMenu extends ScreenAdapter {
         settingsButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-//              game.addScreen(new SettingsScreen(game, assetService));
-//                game.setScreen(settingsScreen.class);
-              System.out.println("Modaolidad no implementada");
+                settingsMenu.open(stage);
             }
         });
 
@@ -124,7 +101,8 @@ public class MainMenu extends ScreenAdapter {
 
     @Override
     public void show() {
-        mainMenuMusic.play();
+        Gdx.input.setCursorCatched(false);
+        assetService.getAudioManager().playMusic(mainMenuMusic);
         Gdx.input.setInputProcessor(stage);
         camera.position.set(viewport.getWorldWidth() / 2f, viewport.getWorldHeight() / 2f, 0);
         camera.zoom = 1f;
@@ -145,6 +123,7 @@ public class MainMenu extends ScreenAdapter {
         stage.act(delta);
         stage.draw();
 
+        settingsMenu.drawSettingsMenu(delta);
     }
 
     @Override
@@ -157,4 +136,3 @@ public class MainMenu extends ScreenAdapter {
         mainMenuMusic.stop();
     }
 }
-//new Stage(new FitViewport(viewport.getWorldWidth(), viewport.getWorldHeight()))
