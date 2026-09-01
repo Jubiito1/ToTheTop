@@ -4,6 +4,26 @@ All notable changes to this project are documented in this file.
 The format is based on Keep a Changelog, and this project adheres
 to Semantic Versioning.
 
+---
+## [0.4.0] - 2026-08-31
+
+### Added
+- Added a reusable Settings menu accessible from the main menu and pause menu.
+- Added music and sound-effect volume controls.
+- Added a shared audio manager for global audio settings.
+- Added reusable slider and label styles to the UI skin.
+
+### Changed
+- Centralized UI style creation in `AssetService`.
+- Updated the application window title to `ToTheTop`.
+- Renamed screen package to menus.
+
+---
+
+## [0.3.0] - 2026-08-30
+
+### Added
+- Added a pause menu, opened with ESC, with Continue, Main Menu, and Settings buttons.
 
 ---
 

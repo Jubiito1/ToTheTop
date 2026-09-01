@@ -52,7 +52,7 @@ public class Character {
 
     private final short groupIndex = -1;
 
-    public Character(Vector2 position, Vector2 size, float weight, World world, Sound dash) {
+    public Character(Vector2 position, Vector2 size, float weight, World world) {
         this.position = position;
 
         Vector2 headSize = new Vector2(size.x * HEAD_WIDTH_RATIO, size.y * HEAD_HEIGHT_RATIO);
