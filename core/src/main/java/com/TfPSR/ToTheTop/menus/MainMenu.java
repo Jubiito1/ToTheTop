@@ -37,10 +37,13 @@ public class MainMenu extends ScreenAdapter {
     private final TextButton singlePlayerButton;
     private final TextButton multipPlayerButton;
     private final TextButton settingsButton;
+    private final TextButton howToPlayButton;
+    private final TextButton exitButton;
     private final Skin skin;
     private final Table tablePlay;
     private final Table settingsTable;
     private final SettingsMenu settingsMenu;
+    private final HowToPlayMenu howToPlayMenu;
 
     public MainMenu(Main game, AssetService assetService, SettingsMenu settingsMenu){
         this.game = game;
@@ -56,10 +59,13 @@ public class MainMenu extends ScreenAdapter {
         this.tablePlay = new Table();
         this.settingsTable = new Table();
         this.settingsMenu = settingsMenu;
+        this.howToPlayMenu = new HowToPlayMenu(assetService);
 
         this.singlePlayerButton = new TextButton("Singleplayer",skin);
         this.multipPlayerButton = new TextButton("Multiplayer", skin);
         this.settingsButton = new TextButton("Settings", skin);
+        this.howToPlayButton = new TextButton("How to Play", skin);
+        this.exitButton = new TextButton("Exit", skin);
 
         singlePlayerButton.addListener(new ChangeListener() {
             @Override
@@ -86,6 +92,20 @@ public class MainMenu extends ScreenAdapter {
             }
         });
 
+        howToPlayButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                howToPlayMenu.open(stage);
+            }
+        });
+
+        exitButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                Gdx.app.exit();
+            }
+        });
+
         tablePlay.setFillParent(true);
         stage.addActor(tablePlay);
 
@@ -93,10 +113,15 @@ public class MainMenu extends ScreenAdapter {
 
         tablePlay.add(multipPlayerButton).width(250).height(60).padLeft(100).padTop(600);
 
+        tablePlay.row();
+        tablePlay.add(howToPlayButton).width(250).height(60).padTop(20).colspan(2);
+
         settingsTable.setFillParent(true);
         stage.addActor(settingsTable);
         settingsTable.top().right();
         settingsTable.add(settingsButton).width(250).height(60).padRight(30).padTop(20);
+        settingsTable.row();
+        settingsTable.add(exitButton).width(250).height(60).padRight(30).padTop(10);
     }
 
     @Override
@@ -124,6 +149,7 @@ public class MainMenu extends ScreenAdapter {
         stage.draw();
 
         settingsMenu.drawSettingsMenu(delta);
+        howToPlayMenu.drawHowToPlayMenu(delta);
     }
 
     @Override
