@@ -29,12 +29,12 @@ The project's main references and inspirations are *Getting Over It*, *Peak*, an
 * Physics-based player character implemented using Box2D.
 * Ragdoll-like character composed of:
 
-    * Head
-    * Torso
-    * Upper arms
-    * Forearms
-    * Hands
-    * Legs
+  * Head
+  * Torso
+  * Upper arms
+  * Forearms
+  * Hands
+  * Legs
 * Body parts connected using Box2D revolute joints.
 * Angular limits implemented for selected joints.
 * Character body-part masses and densities calculated from the player's total weight.
@@ -84,6 +84,14 @@ The following features are part of the planned game but are **not yet implemente
 * Multiple simultaneous players.
 * Player synchronization over the network.
 * Final gameplay progression and win/lose conditions.
+
+---
+
+## Second Project Submission – Demonstration Video
+
+A demonstration video showing the current state of **To The Top** for the project's second submission is available below:
+
+[Watch the demonstration video on YouTube](https://youtu.be/dhm4AgkkpyY)
 
 ---
 
