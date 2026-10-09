@@ -1,5 +1,6 @@
 package com.TfPSR.ToTheTop.asset;
 
+import com.TfPSR.ToTheTop.menus.UiSoundEvent;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.FileHandleResolver;
 import com.badlogic.gdx.graphics.Color;
@@ -20,11 +21,13 @@ public class AssetService implements Disposable {
     private final AssetManager assetManager;
     private final Skin skin;
     private final AudioManager audioManager;
+    private final UiSoundEvent uiSoundEvent;
 
     public AssetService(FileHandleResolver fileHandleResolver) {
         this.assetManager = new AssetManager(fileHandleResolver);
         this.skin = new Skin();
         this.audioManager = new AudioManager();
+        this.uiSoundEvent = new UiSoundEvent();
 
         int size = 20, borderThickness = 2;
         Pixmap pixmapButton = new Pixmap(size, size, Pixmap.Format.RGB888);
@@ -117,5 +120,9 @@ public class AssetService implements Disposable {
 
     public AudioManager getAudioManager() {
         return audioManager;
+    }
+
+    public UiSoundEvent getUiSoundEvent(){
+        return uiSoundEvent;
     }
 }
