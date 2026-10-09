@@ -2,15 +2,18 @@ package com.TfPSR.ToTheTop.menus;
 
 import com.TfPSR.ToTheTop.Main;
 import com.TfPSR.ToTheTop.asset.AssetService;
+import com.TfPSR.ToTheTop.core.Constants;
 import com.TfPSR.ToTheTop.core.GameScreen;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
+
 
 public class PauseMenu {
     private final Stage stage;
@@ -24,7 +27,7 @@ public class PauseMenu {
 
     public PauseMenu(AssetService assetService, Main game, GameScreen gameScreen, SettingsMenu settingsMenu){
         this.assetService = assetService;
-        this.stage = new Stage(new ScreenViewport());
+        this.stage = new Stage(new ExtendViewport(Constants.UI_VIEWPORT_WIDTH, Constants.UI_VIEWPORT_HEIGHT));
         this.skin = assetService.getSkin();
         this.table = new Table();
         this.settingsMenu = settingsMenu;
@@ -32,6 +35,14 @@ public class PauseMenu {
         this.continueButton = new TextButton("Continue", skin);
         this.mainMenuButton = new TextButton("Main Menu", skin);
         this.settingsButton = new TextButton("Settings", skin);
+
+        continueButton.getClickListener().setButton(Input.Buttons.LEFT);
+        mainMenuButton.getClickListener().setButton(Input.Buttons.LEFT);
+        settingsButton.getClickListener().setButton(Input.Buttons.LEFT);
+
+        assetService.getUiSoundEvent().addHoverSound(continueButton, assetService);
+        assetService.getUiSoundEvent().addHoverSound(mainMenuButton, assetService);
+        assetService.getUiSoundEvent().addHoverSound(settingsButton, assetService);
 
         continueButton.addListener(new ChangeListener() {
             @Override
@@ -59,9 +70,9 @@ public class PauseMenu {
         table.setFillParent(true);
         stage.addActor(table);
 
-        table.add(continueButton).width(250).height(60).padTop(600);
-        table.add(mainMenuButton).width(250).height(60).padTop(600);
-        table.add(settingsButton).width(250).height(60).padTop(600);
+        table.add(continueButton).width(280).height(70).padTop(600).padRight(25);
+        table.add(mainMenuButton).width(280).height(70).padTop(600).padRight(25);
+        table.add(settingsButton).width(280).height(70).padTop(600).padRight(25);
         stage.getRoot().setVisible(false);
     }
 
@@ -80,7 +91,7 @@ public class PauseMenu {
         return stage;
     }
 
-
-
-
+    public void resize(int width, int height){
+        stage.getViewport().update(width, height, true);
+    }
 }

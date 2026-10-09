@@ -1,6 +1,7 @@
 package com.TfPSR.ToTheTop.menus;
 
 import com.TfPSR.ToTheTop.asset.AssetService;
+import com.TfPSR.ToTheTop.core.Constants;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
@@ -13,7 +14,9 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
+
 
 public class HowToPlayMenu {
     private final Stage stage;
@@ -23,7 +26,7 @@ public class HowToPlayMenu {
     private InputProcessor previousInputProcessor;
 
     public HowToPlayMenu(AssetService assetService){
-        this.stage = new Stage(new ScreenViewport());
+        this.stage = new Stage(new ExtendViewport(Constants.UI_VIEWPORT_WIDTH, Constants.UI_VIEWPORT_HEIGHT));
         this.skin = assetService.getSkin();
         this.table = new Table();
 
@@ -63,6 +66,10 @@ public class HowToPlayMenu {
         addControlRow(controlsTable, "Pause", "ESC", labelStyle, keyStyle);
 
         this.backButton = new TextButton("Back", skin);
+
+        backButton.getClickListener().setButton(Input.Buttons.LEFT);
+
+        assetService.getUiSoundEvent().addHoverSound(backButton, assetService);
 
         backButton.addListener(new ChangeListener() {
             @Override

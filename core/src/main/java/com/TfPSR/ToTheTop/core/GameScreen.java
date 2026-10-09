@@ -148,4 +148,12 @@ public class GameScreen extends ScreenAdapter {
         Gdx.input.setInputProcessor(inputMultiplexer);
         pauseMenu.close();
     }
+
+    @Override
+    public void resize(int width, int height){
+        viewport.update(width, height);
+
+        pauseMenu.resize(width, height);
+        settingsMenu.resize(width, height);
+    }
 }
