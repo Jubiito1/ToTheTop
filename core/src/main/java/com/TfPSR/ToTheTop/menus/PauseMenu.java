@@ -2,6 +2,7 @@ package com.TfPSR.ToTheTop.menus;
 
 import com.TfPSR.ToTheTop.Main;
 import com.TfPSR.ToTheTop.asset.AssetService;
+import com.TfPSR.ToTheTop.asset.SoundAsset;
 import com.TfPSR.ToTheTop.core.Constants;
 import com.TfPSR.ToTheTop.core.GameScreen;
 import com.badlogic.gdx.Gdx;
@@ -47,6 +48,7 @@ public class PauseMenu {
         continueButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
                 gameScreen.resumeGame();
             }
         });
@@ -54,6 +56,7 @@ public class PauseMenu {
         mainMenuButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
                 stage.getRoot().setVisible(false);
                 game.setScreen(MainMenu.class);
             }
@@ -62,6 +65,7 @@ public class PauseMenu {
         settingsButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
                 settingsMenu.open(gameScreen.getInputMultiplexer());
             }
         });
@@ -77,6 +81,7 @@ public class PauseMenu {
     }
 
     public void open(){
+        assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
         Gdx.input.setCursorCatched(false);
         Gdx.input.setInputProcessor(stage);
         stage.getRoot().setVisible(true);

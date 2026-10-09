@@ -1,6 +1,7 @@
 package com.TfPSR.ToTheTop.menus;
 
 import com.TfPSR.ToTheTop.asset.AssetService;
+import com.TfPSR.ToTheTop.asset.SoundAsset;
 import com.TfPSR.ToTheTop.core.Constants;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
@@ -74,6 +75,7 @@ public class HowToPlayMenu {
         backButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
                 close();
             }
         });

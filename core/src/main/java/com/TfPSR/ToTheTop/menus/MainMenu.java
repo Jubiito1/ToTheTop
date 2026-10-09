@@ -1,5 +1,6 @@
 package com.TfPSR.ToTheTop.menus;
 
+import com.TfPSR.ToTheTop.asset.SoundAsset;
 import com.TfPSR.ToTheTop.core.Constants;
 import com.TfPSR.ToTheTop.core.GameScreen;
 import com.TfPSR.ToTheTop.Main;
@@ -80,6 +81,7 @@ public class MainMenu extends ScreenAdapter {
         singlePlayerButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
                 game.addScreen(new GameScreen(game, assetService, settingsMenu));
                 game.setScreen(GameScreen.class);
             }
@@ -89,6 +91,7 @@ public class MainMenu extends ScreenAdapter {
         multipPlayerButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
 //              game.addScreen(new GameScreen(game, assetService));
 //              game.setScreen(GameScreen.class);
               System.out.println("Modalidad no implementada");
@@ -98,6 +101,7 @@ public class MainMenu extends ScreenAdapter {
         settingsButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
                 settingsMenu.open(stage);
             }
         });
@@ -105,6 +109,7 @@ public class MainMenu extends ScreenAdapter {
         howToPlayButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
                 howToPlayMenu.open(stage);
             }
         });
@@ -112,6 +117,7 @@ public class MainMenu extends ScreenAdapter {
         exitButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
                 Gdx.app.exit();
             }
         });

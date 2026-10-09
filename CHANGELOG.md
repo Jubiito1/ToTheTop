@@ -14,6 +14,7 @@ to Semantic Versioning.
 * Added `UiSoundEvent` to attach sound listeners to buttons and sliders.
 * Added hover and slider sound assets.
 * Added UI viewport size constants.
+* Added sound effect on clicking buttons.
 
 ### Changed
 

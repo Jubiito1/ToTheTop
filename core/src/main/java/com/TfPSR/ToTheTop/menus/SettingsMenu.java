@@ -76,6 +76,7 @@ public class SettingsMenu {
         continueButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
                 close();
             }
         });
