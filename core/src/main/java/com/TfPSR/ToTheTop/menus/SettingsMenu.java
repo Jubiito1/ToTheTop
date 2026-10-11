@@ -25,12 +25,18 @@ public class SettingsMenu {
     private final Label soundLabel;
     private final TextButton continueButton;
     private  InputProcessor previusInputProcessor;
+    private final Image backgroundOverlay;
 
     public SettingsMenu(AssetService assetService){
         this.stage = new Stage(new ExtendViewport(Constants.UI_VIEWPORT_WIDTH, Constants.UI_VIEWPORT_HEIGHT));
         this.assetService = assetService;
         this.skin = assetService.getSkin();
         this.table = new Table();
+
+        this.backgroundOverlay = new Image(skin.getDrawable("white"));
+        backgroundOverlay.setColor(0f, 0f, 0f, 0.65f);
+        backgroundOverlay.setFillParent(true);
+
         this.musicLabel = new Label("Music Volume", skin.get("defaultLabelStyle", Label.LabelStyle.class));
         this.soundLabel = new Label("Sound Volume", skin.get("defaultLabelStyle", Label.LabelStyle.class));
 
@@ -82,6 +88,7 @@ public class SettingsMenu {
         });
 
         table.setFillParent(true);
+        stage.addActor(backgroundOverlay);
         stage.addActor(table);
 
         table.add(musicLabel).padRight(25);

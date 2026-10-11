@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
@@ -85,6 +86,18 @@ public class AssetService implements Disposable {
         labelStyle.fontColor = Color.WHITE;
 
         skin.add("defaultLabelStyle", labelStyle);
+
+        Pixmap pixmapBackground = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmapBackground.setColor(Color.WHITE);
+        pixmapBackground.fill();
+
+        Texture textureBackground = new Texture(pixmapBackground);
+        TextureRegion textureRegionBackground = new TextureRegion(textureBackground);
+        TextureRegionDrawable backgroundDrwabable = new TextureRegionDrawable(textureRegionBackground);
+        skin.add("white",  backgroundDrwabable, Drawable.class);
+
+        pixmapBackground.dispose();
+
     }
 
 

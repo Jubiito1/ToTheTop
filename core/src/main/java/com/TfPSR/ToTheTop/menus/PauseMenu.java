@@ -12,6 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -28,6 +29,7 @@ public class PauseMenu {
     private final TextButton mainMenuButton;
     private final Table table;
     private final SettingsMenu settingsMenu;
+    private final Image backgroundOverlay;
 
     public PauseMenu(AssetService assetService, Main game, GameScreen gameScreen, SettingsMenu settingsMenu){
         this.assetService = assetService;
@@ -35,6 +37,10 @@ public class PauseMenu {
         this.skin = assetService.getSkin();
         this.table = new Table();
         this.settingsMenu = settingsMenu;
+
+        this.backgroundOverlay = new Image(skin.getDrawable("white"));
+        backgroundOverlay.setColor(0f, 0f, 0f, 0.65f);
+        backgroundOverlay.setFillParent(true);
 
         this.continueButton = new TextButton("Continue", skin);
         this.mainMenuButton = new TextButton("Main Menu", skin);
@@ -75,6 +81,7 @@ public class PauseMenu {
 
 
         table.setFillParent(true);
+        stage.addActor(backgroundOverlay);
         stage.addActor(table);
 
         table.add(continueButton).width(280).height(70).padTop(600).padRight(25);

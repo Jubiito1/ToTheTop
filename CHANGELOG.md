@@ -15,6 +15,7 @@ to Semantic Versioning.
 * Added hover and slider sound assets.
 * Added UI viewport size constants.
 * Added sound effect on clicking buttons.
+* Added backgroundOverlay on pause menu and settings menu
 
 ### Changed
 
@@ -23,6 +24,7 @@ to Semantic Versioning.
 ### Fixed
 
 * Fixed the pause and settings menus not adapting to window resizes.
+* Fixed the pause menu not closing touching esc key
 
 ### Removed
 
