@@ -139,13 +139,19 @@ public class GameScreen extends ScreenAdapter {
     }
 
     public void pauseGame(){
+        if(paused)
+            return;
+
+        inputProcessor.resetMouseButtons();
         paused = true;
         pauseMenu.open();
     }
 
     public void resumeGame(){
+        if(!paused)
+            return;
+
         paused = false;
-        Gdx.input.setInputProcessor(inputMultiplexer);
         pauseMenu.close();
     }
 

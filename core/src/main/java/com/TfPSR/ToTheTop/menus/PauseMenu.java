@@ -7,7 +7,10 @@ import com.TfPSR.ToTheTop.core.Constants;
 import com.TfPSR.ToTheTop.core.GameScreen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -83,11 +86,11 @@ public class PauseMenu {
     public void open(){
         assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
         Gdx.input.setCursorCatched(false);
-        Gdx.input.setInputProcessor(stage);
         stage.getRoot().setVisible(true);
     }
 
     public void close(){
+        assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
         Gdx.input.setCursorCatched(true);
         stage.getRoot().setVisible(false);
     }
