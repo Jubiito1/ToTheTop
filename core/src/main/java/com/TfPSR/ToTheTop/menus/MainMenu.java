@@ -5,25 +5,22 @@ import com.TfPSR.ToTheTop.Main;
 import com.TfPSR.ToTheTop.asset.AssetService;
 import com.TfPSR.ToTheTop.asset.MusicAsset;
 import com.TfPSR.ToTheTop.asset.TextureAsset;
+import com.TfPSR.ToTheTop.network.ThreadClient;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Color;
-import org.w3c.dom.Text;
+
+import java.io.IOException;
 
 public class MainMenu extends ScreenAdapter {
     private final Main game;
@@ -79,9 +76,12 @@ public class MainMenu extends ScreenAdapter {
         multipPlayerButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-//              game.addScreen(new GameScreen(game, assetService));
-//              game.setScreen(GameScreen.class);
-              System.out.println("Modalidad no implementada");
+                try {
+                    game.addScreen(new WaitingMenu(game, assetService, settingsMenu));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                game.setScreen(WaitingMenu.class);
             }
         });
 
