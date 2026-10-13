@@ -40,6 +40,7 @@ public class WaitingMenu extends ScreenAdapter {
     private final Label statusLabel;
     private float time;
     private ThreadClient threadClient;
+    private boolean ready = false;
 
     public WaitingMenu(Main game, AssetService assetService, SettingsMenu settingsMenu) throws IOException {
         this.game = game;
@@ -51,6 +52,10 @@ public class WaitingMenu extends ScreenAdapter {
         this.backgroundImage = assetService.get(TextureAsset.BACKGROUND_IMAGE);
         this.music = assetService.get(MusicAsset.MAIN_MENU_MUSIC);
         this.stage = new Stage(new ScreenViewport());
+
+        // si se volvio de una partida anterior, la flag tiene que arrancar en false
+        StartFlag.startFlag = false;
+
         this.threadClient = new ThreadClient();
         this.threadClient.start();
 
@@ -58,15 +63,27 @@ public class WaitingMenu extends ScreenAdapter {
         Label.LabelStyle labelStyle = skin.get("defaultLabelStyle", Label.LabelStyle.class);
         Label.LabelStyle titleStyle = new Label.LabelStyle(labelStyle.font, new Color(1f, 0.78f, 0.38f, 1f));
 
-        Label title = new Label("BUSCANDO RIVAL", titleStyle);
+        Label title = new Label("SALA MULTIJUGADOR", titleStyle);
         title.setFontScale(2f);
-        this.statusLabel = new Label("Conectando con el servidor", labelStyle);
+        this.statusLabel = new Label("Buscando servidor", labelStyle);
+
+        TextButton readyButton = new TextButton("LISTO", skin);
+        readyButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                if (threadClient.getStatus() == ThreadClient.Status.REJECTED)
+                    return; // no se pudo entrar a la sala, no tiene sentido marcar listo
+                ready = !ready;
+                threadClient.setReady(ready);
+                readyButton.setText(ready ? "LISTO (OK)" : "LISTO");
+            }
+        });
 
         TextButton cancelButton = new TextButton("Cancelar", skin);
         cancelButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                threadClient.interrupt();
+                threadClient.disconnect();
                 game.setScreen(MainMenu.class);
             }
         });
@@ -78,8 +95,20 @@ public class WaitingMenu extends ScreenAdapter {
         table.row();
         table.add(statusLabel).padTop(25);
         table.row();
-        table.add(cancelButton).width(220).height(55).padTop(30);
+        table.add(readyButton).width(220).height(55).padTop(30);
+        table.row();
+        table.add(cancelButton).width(220).height(55).padTop(15);
         stage.addActor(table);
+    }
+
+    /** Texto del estado de la sala, segun lo que vaya respondiendo el server. */
+    private String statusText(String dots) {
+        return switch (threadClient.getStatus()) {
+            case REJECTED -> "No se pudo unir a la sala (llena o en curso)";
+            case ACCEPTED, STARTED -> "Conectado  |  " + threadClient.getPlayers() + "/4 jugadores  |  "
+                    + threadClient.getReadyCount() + " listos (min. 2)" + dots;
+            default -> "Buscando servidor" + dots;
+        };
     }
 
     @Override
@@ -105,7 +134,7 @@ public class WaitingMenu extends ScreenAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         time += delta;
-        statusLabel.setText("Esperando jugador" + DOTS[(int) (time / 0.4f) % DOTS.length]);
+        statusLabel.setText(statusText(DOTS[(int) (time / 0.4f) % DOTS.length]));
 
         camera.update();
         batch.setProjectionMatrix(camera.combined);
