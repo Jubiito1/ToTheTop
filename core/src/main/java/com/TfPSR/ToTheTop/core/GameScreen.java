@@ -6,9 +6,7 @@ import com.TfPSR.ToTheTop.asset.SoundAsset;
 import com.TfPSR.ToTheTop.entity.Character;
 import com.TfPSR.ToTheTop.input.GameInputProcessor;
 import com.TfPSR.ToTheTop.map.GameMap;
-import com.TfPSR.ToTheTop.map.Rocks;
 import com.TfPSR.ToTheTop.menus.SettingsMenu;
-import com.TfPSR.ToTheTop.physics.GameContactListener;
 import com.TfPSR.ToTheTop.menus.PauseMenu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
@@ -19,7 +17,6 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class GameScreen extends ScreenAdapter {
@@ -30,8 +27,6 @@ public class GameScreen extends ScreenAdapter {
     private final OrthographicCamera camera;
     private final Batch batch;
 
-    private final World world;
-    private final Box2DDebugRenderer debugRenderer;
     private final Character player;
 
     private final GameMap map;
@@ -41,7 +36,6 @@ public class GameScreen extends ScreenAdapter {
     private final Sound dash;
     private final InputMultiplexer inputMultiplexer;
 
-    private final Rocks rocks;
 
     private final GameInputProcessor inputProcessor;
     private boolean paused = false;
@@ -59,16 +53,11 @@ public class GameScreen extends ScreenAdapter {
         this.settingsMenu = settingsMenu;
         this.pauseMenu = new PauseMenu(assetService, game, this, settingsMenu);
 
-        this.debugRenderer = new Box2DDebugRenderer();
         map = new GameMap("maps/map.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map.getTiledMap(), 1f / Constants.PIXELS_PER_METER);
 
-        world = new World(GRAVEDAD, true);
-        world.setContactListener(new GameContactListener());
 
-        rocks = new Rocks(map.getSurfaceObjects(), world);
-
-        player = new Character( map.getPlayerSpawn(), new Vector2(0.6f, 1.80f), 80f, world);
+        player = new Character( map.getPlayerSpawn(), new Vector2(0.6f, 1.80f));
 
         inputProcessor = new GameInputProcessor(this);
         inputMultiplexer.addProcessor(pauseMenu.getStage());
@@ -95,11 +84,10 @@ public class GameScreen extends ScreenAdapter {
     private void draw() {
         mapRenderer.setView(camera);
         mapRenderer.render();
+        batch.setProjectionMatrix(camera.combined);
         batch.begin();
         player.draw(batch);
 
-        batch.setProjectionMatrix(camera.combined);
-        debugRenderer.render(world, camera.combined);
         batch.end();
 
         if (paused) {
@@ -114,24 +102,8 @@ public class GameScreen extends ScreenAdapter {
         camera.position.set(player.getPosition().x, player.getPosition().y, 0);
         camera.zoom = 1.5f;
         camera.update();
-
-        Vector2 mouseVelocity = getMouseVelocity(delta);
-        player.update(mouseVelocity, inputProcessor.isLeftMousePressed(), inputProcessor.isRightMousePressed());
-
-        world.step(delta, 10, 4);
     }
 
-    private Vector2 getMouseVelocity(float delta) {
-        Vector2 mouseDelta = inputProcessor.getMouseDelta();
-
-        float worldWidth = viewport.getWorldWidth() * camera.zoom;
-        float worldHeight = viewport.getWorldHeight() * camera.zoom;
-
-        float velocityX = (mouseDelta.x / viewport.getScreenWidth()) * worldWidth / delta;
-        float velocityY = -(mouseDelta.y / viewport.getScreenHeight()) * worldHeight / delta;
-
-        return new Vector2(velocityX, velocityY);
-    }
 
     public boolean isPaused(){
         return paused;

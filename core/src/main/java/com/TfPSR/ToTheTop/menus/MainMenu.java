@@ -31,7 +31,6 @@ public class MainMenu extends ScreenAdapter {
     private final OrthographicCamera camera;
     private final Batch batch;
     private final Stage stage;
-    private final TextButton singlePlayerButton;
     private final TextButton multipPlayerButton;
     private final TextButton settingsButton;
     private final TextButton howToPlayButton;
@@ -58,19 +57,10 @@ public class MainMenu extends ScreenAdapter {
         this.settingsMenu = settingsMenu;
         this.howToPlayMenu = new HowToPlayMenu(assetService);
 
-        this.singlePlayerButton = new TextButton("Singleplayer",skin);
         this.multipPlayerButton = new TextButton("Multiplayer", skin);
         this.settingsButton = new TextButton("Settings", skin);
         this.howToPlayButton = new TextButton("How to Play", skin);
         this.exitButton = new TextButton("Exit", skin);
-
-        singlePlayerButton.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                game.addScreen(new GameScreen(game, assetService, settingsMenu));
-                game.setScreen(GameScreen.class);
-            }
-        });
 
 
         multipPlayerButton.addListener(new ChangeListener() {
@@ -108,8 +98,6 @@ public class MainMenu extends ScreenAdapter {
 
         tablePlay.setFillParent(true);
         stage.addActor(tablePlay);
-
-        tablePlay.add(singlePlayerButton).width(250).height(60).padTop(600);
 
         tablePlay.add(multipPlayerButton).width(250).height(60).padLeft(100).padTop(600);
 
