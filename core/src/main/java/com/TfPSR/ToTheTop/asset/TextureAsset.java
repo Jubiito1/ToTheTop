@@ -6,7 +6,8 @@ import org.w3c.dom.Text;
 
 public enum TextureAsset implements Asset<Texture>{
     BACKGROUND_IMAGE("backgroundImage.png"),
-    LOGO("logo.jpg");
+    LOGO("logo.jpg"),
+    LOAD("loadBackground.jpg");
 
     private final AssetDescriptor<Texture> descriptor;
 

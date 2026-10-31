@@ -11,6 +11,8 @@ to Semantic Versioning.
 ### Added
 
 * Added an animated splash screen with a glowing logo and transition to the loading screen.
+* Added a loading screen with a percentage indicator, rounded progress bar, and background image.
+* Added Tiled map loading through `AssetManager`.
 
 ---
 ## [0.7.0] - 2026-10-08

@@ -1,5 +1,7 @@
 package com.TfPSR.ToTheTop.map;
 
+import com.TfPSR.ToTheTop.asset.AssetService;
+import com.TfPSR.ToTheTop.asset.TiledMapAsset;
 import com.TfPSR.ToTheTop.core.Constants;
 import com.badlogic.gdx.maps.MapGroupLayer;
 import com.badlogic.gdx.maps.MapLayer;
@@ -13,11 +15,11 @@ public class GameMap {
     private final TiledMap map;
     private final MapLayer playerLayer;
     private final MapLayer surfaceLayer;
+    private final AssetService assetService;
 
-    public GameMap(String mapPath) {
-        TmxMapLoader loader = new TmxMapLoader();
-
-        map = loader.load(mapPath);
+    public GameMap(AssetService assetService) {
+        this.assetService = assetService;
+        map = (assetService.get(TiledMapAsset.FIRST_TILED_MAP));
         final MapGroupLayer gameplayLayer = (MapGroupLayer) map.getLayers().get("Gameplay");
         playerLayer = gameplayLayer.getLayers().get("Player");
         surfaceLayer = gameplayLayer.getLayers().get("Surface");

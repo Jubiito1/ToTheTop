@@ -9,6 +9,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
@@ -26,6 +28,7 @@ public class AssetService implements Disposable {
 
     public AssetService(FileHandleResolver fileHandleResolver) {
         this.assetManager = new AssetManager(fileHandleResolver);
+        this.assetManager.setLoader(TiledMap.class, new TmxMapLoader(fileHandleResolver));
         this.skin = new Skin();
         this.audioManager = new AudioManager();
         this.uiSoundEvent = new UiSoundEvent();
@@ -131,11 +134,17 @@ public class AssetService implements Disposable {
     }
 
 
+    public float getProgress(){
+        return assetManager.getProgress();
+    }
+
     public AudioManager getAudioManager() {
         return audioManager;
     }
 
     public UiSoundEvent getUiSoundEvent(){
         return uiSoundEvent;
+
+
     }
 }

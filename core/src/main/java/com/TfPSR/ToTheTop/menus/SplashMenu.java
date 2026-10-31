@@ -28,6 +28,7 @@ public class SplashMenu extends ScreenAdapter{
         glowTexture = createGlowTexture();
         glowImage = new Image(glowTexture);
         logoImage = new Image(assetService.load(TextureAsset. LOGO));
+        assetService.load(TextureAsset.LOAD);
 
         stage.addActor(glowImage);
         stage.addActor(logoImage);
