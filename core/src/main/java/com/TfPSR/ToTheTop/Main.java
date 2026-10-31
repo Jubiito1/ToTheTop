@@ -2,6 +2,7 @@ package com.TfPSR.ToTheTop;
 
 import com.TfPSR.ToTheTop.asset.AssetService;
 import com.TfPSR.ToTheTop.menus.LoadMenu;
+import com.TfPSR.ToTheTop.menus.SplashMenu;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
@@ -33,8 +34,8 @@ public class Main extends Game { //We use Game, because it has better methods of
         this.viewport = new FitViewport(MAX_WIDTH, MAX_HEIGHT, camera);
         this.assetService = new AssetService(new InternalFileHandleResolver());
 
-        addScreen(new LoadMenu(this, assetService));
-        setScreen(LoadMenu.class);
+        addScreen(new SplashMenu(this, assetService));
+        setScreen(SplashMenu.class);
     }
 
     @Override

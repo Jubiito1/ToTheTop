@@ -5,6 +5,14 @@ The format is based on Keep a Changelog, and this project adheres
 to Semantic Versioning.
 
 ---
+
+## [Unreleased]
+
+### Added
+
+* Added an animated splash screen with a glowing logo and transition to the loading screen.
+
+---
 ## [0.7.0] - 2026-10-08
 
 ### Added

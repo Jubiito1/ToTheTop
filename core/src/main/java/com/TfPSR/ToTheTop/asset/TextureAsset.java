@@ -5,7 +5,8 @@ import com.badlogic.gdx.graphics.Texture;
 import org.w3c.dom.Text;
 
 public enum TextureAsset implements Asset<Texture>{
-    BACKGROUND_IMAGE("backgroundImage.png");
+    BACKGROUND_IMAGE("backgroundImage.png"),
+    LOGO("logo.jpg");
 
     private final AssetDescriptor<Texture> descriptor;
 
