@@ -47,10 +47,6 @@ public class ThreadClient extends Thread {
         return readyCount;
     }
 
-    /**
-     * Marca/desmarca al jugador como listo. Si la conexion todavía no fue aceptada
-     * guarda el pedido y lo reenvia apenas llega el ACCEPT (evita perder el click).
-     */
     public void setReady(boolean ready) {
         wantReady = ready;
         if (status == Status.ACCEPTED)
@@ -63,12 +59,22 @@ public class ThreadClient extends Thread {
         conection.send(data);
     }
 
-    /** Envia sin lanzar excepcion, para usar desde el render thread. */
     private void trySend(byte header) {
         try {
             send(header);
         } catch (IOException ignored) {
             // si no se puede enviar, el timeout del loop reintenta
+        }
+    }
+
+    public void sendInput(float mouseX, float mouseY, boolean left, boolean right,
+                          boolean a, boolean d) {
+        if (!running || status != Status.STARTED)
+            return;
+        try {
+            byte[] buf = InputPacket.encode(mouseX, mouseY, left, right, a, d);
+            conection.send(new DatagramPacket(buf, buf.length, ipServer, PORT));
+        } catch (IOException ignored) {
         }
     }
 
@@ -84,16 +90,12 @@ public class ThreadClient extends Thread {
                 conection.receive(dp);
                 processMessage(dp);
 
-                if (status == Status.STARTED) {
-                    // la partida arranco: se cierra el socket y el hilo muere
-                    conection.close();
-                    return;
-                }
                 if (status == Status.REJECTED)
                     return;
             } catch (SocketTimeoutException e) {
-                // nadie contesto: se reintenta (descubrimiento o keepalive)
-                if (running && status != Status.REJECTED)
+                // el socket tiene que quedar abierto durante la partida para seguir
+                // mandando input; solo se reintenta CONNECT mientras no haya partida
+                if (running && (status == Status.SEARCHING || status == Status.ACCEPTED))
                     trySend(NetworkHeaders.CONNECT);
             } catch (SocketException e) {
                 if (running)

@@ -9,6 +9,8 @@ import com.TfPSR.ToTheTop.core.GameScreen;
 public class GameInputProcessor extends InputAdapter {
     private boolean leftMousePressed;
     private boolean rightMousePressed;
+    private boolean aPressed;
+    private boolean dPressed;
     private final Vector2 mouseDelta = new Vector2();
     private final GameScreen gameScreen;
 
@@ -69,6 +71,16 @@ public class GameInputProcessor extends InputAdapter {
 
     @Override
     public boolean keyDown(int keycode) {
+        if (keycode == Input.Keys.A) {
+            aPressed = true;
+            return true;
+        }
+
+        if (keycode == Input.Keys.D) {
+            dPressed = true;
+            return true;
+        }
+
         if (keycode == Input.Keys.ESCAPE) {
             if (gameScreen.isPaused()) {
                 gameScreen.resumeGame();
@@ -79,6 +91,29 @@ public class GameInputProcessor extends InputAdapter {
         }
 
         return false;
+    }
+
+    @Override
+    public boolean keyUp(int keycode) {
+        if (keycode == Input.Keys.A) {
+            aPressed = false;
+            return true;
+        }
+
+        if (keycode == Input.Keys.D) {
+            dPressed = false;
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean isAPressed() {
+        return aPressed;
+    }
+
+    public boolean isDPressed() {
+        return dPressed;
     }
 
     public void resetMouseButtons() {

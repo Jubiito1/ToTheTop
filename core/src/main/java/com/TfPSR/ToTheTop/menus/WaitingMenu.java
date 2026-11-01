@@ -125,7 +125,7 @@ public class WaitingMenu extends ScreenAdapter {
     public void render(float delta) {
         // la flag la escribe el ThreadClient, esto corre en el render thread
         if (StartFlag.startFlag) {
-            game.addScreen(new GameScreen(game, assetService, settingsMenu));
+            game.addScreen(new GameScreen(game, assetService, settingsMenu, threadClient));
             game.setScreen(GameScreen.class);
             return;
         }
