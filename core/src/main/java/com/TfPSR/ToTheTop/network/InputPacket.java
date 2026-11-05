@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 
 public final class InputPacket {
 
-    public static final int SIZE = 13;
+    public static final int SIZE = 14;
 
     public static final int BUTTON_LEFT = 1;
     public static final int BUTTON_RIGHT = 1 << 1;
@@ -24,10 +24,11 @@ public final class InputPacket {
     public static byte[] encode(float mouseX, float mouseY,
                                 boolean left, boolean right,
                                 boolean a, boolean d,
-                                int events) {
+                                int session, int events) {
         ByteBuffer buffer = ByteBuffer.allocate(SIZE);
         buffer.put(NetworkHeaders.INPUT);
         buffer.put(ProtocolVersion.CURRENT);
+        buffer.put((byte) session);
         buffer.putFloat(mouseX);
         buffer.putFloat(mouseY);
         buffer.put(buttons(left, right));
