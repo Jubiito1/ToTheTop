@@ -9,6 +9,7 @@ import com.TfPSR.ToTheTop.menus.SettingsMenu;
 import com.TfPSR.ToTheTop.menus.PauseMenu;
 import com.TfPSR.ToTheTop.network.PartState;
 import com.TfPSR.ToTheTop.network.PlayerState;
+import com.TfPSR.ToTheTop.network.StateInterpolator;
 import com.TfPSR.ToTheTop.network.StatePacket;
 import com.TfPSR.ToTheTop.network.ThreadClient;
 import com.badlogic.gdx.Gdx;
@@ -27,6 +28,7 @@ public class GameScreen extends ScreenAdapter {
     private static final int MAX_INPUTS_PER_FRAME = 5;      // evita una avalancha tras un freeze
     private static final int MAX_PLAYERS = 4;
     private static final Vector2 CHARACTER_SIZE = new Vector2(0.6f, 1.80f);
+    private static final float SNAPSHOT_INTERVAL = 1f / 60f;
 
     private final Main game;
     private final Viewport viewport;
@@ -46,6 +48,10 @@ public class GameScreen extends ScreenAdapter {
     private final Vector2 pointer = new Vector2();       // cursor virtual, en pixeles de pantalla
     private final Vector2 worldPointer = new Vector2();  // mismo punto, en metros de mundo
     private float inputAccumulator;
+
+    private StatePacket.Snapshot previousSnapshot;
+    private StatePacket.Snapshot currentSnapshot;
+    private float snapshotAge;
 
 
     private final GameInputProcessor inputProcessor;
@@ -70,6 +76,8 @@ public class GameScreen extends ScreenAdapter {
 
         spawn = map.getPlayerSpawn(); // We change the creation of the character, with exact values, for a posterior creation of the character
 
+        // el cursor esta capturado: el puntero real no es una posicion valida, asi
+        // que se reconstruye acumulando deltas y se arranca desde el centro
         pointer.set(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f);
 
         inputProcessor = new GameInputProcessor(this);
@@ -115,16 +123,36 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void update(float delta) {
-        applySnapshot(); //Using a snap of the current state of the match we update all the body parts
+        updateSnapshot(delta);//Using a snap of the current state of the match we update all the body parts
         centerCameraOnPlayers(); //We change it because of the quantity of players
         sendInput(delta);
     }
 
-    private void applySnapshot() {
-        StatePacket.Snapshot snapshot = network.getSnapshot();  //it gets the last snap to manage the loop
-        if (snapshot == null)
+    private void updateSnapshot(float delta) {
+        StatePacket.Snapshot incoming = network.getSnapshot();
+        if (incoming != null && incoming != currentSnapshot) {
+            previousSnapshot = currentSnapshot;
+            currentSnapshot = incoming;
+            snapshotAge = 0f;
+        }
+
+        if (currentSnapshot == null)
             return;
 
+        snapshotAge += delta;
+        float alpha = Math.min(1f, snapshotAge / SNAPSHOT_INTERVAL);
+
+        applySnapshot(previousSnapshot == null
+                ? currentSnapshot
+                : StateInterpolator.interpolate(previousSnapshot, currentSnapshot, alpha));
+    }
+
+    /**
+     * Copies a snapshot onto the sprites. The client never simulates: it only
+     * places each body where the server says it is. A slot is created lazily on
+     * the first snapshot that mentions it.
+     */
+    private void applySnapshot(StatePacket.Snapshot snapshot) {
         for (PlayerState state : snapshot.players()) {
             int slot = state.slot();
             if (slot < 0 || slot >= players.length || state.parts().length == 0)
@@ -143,7 +171,6 @@ public class GameScreen extends ScreenAdapter {
             }
         }
     }
-
 
     private void centerCameraOnPlayers() {
         boolean found = false;
@@ -176,7 +203,6 @@ public class GameScreen extends ScreenAdapter {
         camera.update();
     }
 
-
     private void sendInput(float delta) {
         updatePointer();
         inputAccumulator += delta;
@@ -197,6 +223,7 @@ public class GameScreen extends ScreenAdapter {
         if (inputAccumulator > INPUT_INTERVAL * MAX_INPUTS_PER_FRAME)
             inputAccumulator = 0f;
     }
+
 
     private void updatePointer() {
         Vector2 delta = inputProcessor.getMouseDelta();
