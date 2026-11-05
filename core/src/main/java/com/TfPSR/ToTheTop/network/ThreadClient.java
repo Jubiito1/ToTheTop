@@ -74,11 +74,11 @@ public class ThreadClient extends Thread {
     }
 
     public void sendInput(float mouseX, float mouseY, boolean left, boolean right,
-                          boolean a, boolean d) {
+                          boolean a, boolean d, int events) {
         if (!running || status != Status.STARTED)
             return;
         try {
-            byte[] buf = InputPacket.encode(mouseX, mouseY, left, right, a, d);
+            byte[] buf = InputPacket.encode(mouseX, mouseY, left, right, a, d, events);
             conection.send(new DatagramPacket(buf, buf.length, ipServer, PORT));
         } catch (IOException ignored) {
         }
