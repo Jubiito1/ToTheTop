@@ -11,6 +11,7 @@ public class GameInputProcessor extends InputAdapter {
     private boolean rightMousePressed;
     private boolean aPressed;
     private boolean dPressed;
+    private boolean impulseRequested;
     private final Vector2 mouseDelta = new Vector2();
     private final GameScreen gameScreen;
 
@@ -81,6 +82,11 @@ public class GameInputProcessor extends InputAdapter {
             return true;
         }
 
+        if (keycode == Input.Keys.SPACE) {
+            impulseRequested = true;
+            return true;
+        }
+
         if (keycode == Input.Keys.ESCAPE) {
             if (gameScreen.isPaused()) {
                 gameScreen.resumeGame();
@@ -114,6 +120,16 @@ public class GameInputProcessor extends InputAdapter {
 
     public boolean isDPressed() {
         return dPressed;
+    }
+
+    /**
+     * Reads and clears the impulse request latched by the space bar, so one key
+     * press produces exactly one event instead of one per render frame.
+     */
+    public boolean consumeImpulse() {
+        boolean requested = impulseRequested;
+        impulseRequested = false;
+        return requested;
     }
 
     public void resetMouseButtons() {

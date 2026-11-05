@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 
 public final class InputPacket {
 
-    public static final int SIZE = 12;
+    public static final int SIZE = 13;
 
     public static final int BUTTON_LEFT = 1;
     public static final int BUTTON_RIGHT = 1 << 1;
@@ -12,12 +12,19 @@ public final class InputPacket {
     public static final int KEY_A = 1;
     public static final int KEY_D = 1 << 1;
 
+    /** One-off events: the client repeats each bit for a few ticks. */
+    public static final int EVENT_IMPULSE = 1;
+    public static final int EVENT_PAUSE = 1 << 1;
+    public static final int EVENT_RESUME = 1 << 2;
+    public static final int EVENT_LEAVE = 1 << 3;
+
     private InputPacket() {
     }
 
     public static byte[] encode(float mouseX, float mouseY,
                                 boolean left, boolean right,
-                                boolean a, boolean d) {
+                                boolean a, boolean d,
+                                int events) {
         ByteBuffer buffer = ByteBuffer.allocate(SIZE);
         buffer.put(NetworkHeaders.INPUT);
         buffer.put(ProtocolVersion.CURRENT);
@@ -25,6 +32,7 @@ public final class InputPacket {
         buffer.putFloat(mouseY);
         buffer.put(buttons(left, right));
         buffer.put(keys(a, d));
+        buffer.put((byte) events);
         return buffer.array();
     }
 

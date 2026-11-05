@@ -7,6 +7,7 @@ import com.TfPSR.ToTheTop.input.GameInputProcessor;
 import com.TfPSR.ToTheTop.map.GameMap;
 import com.TfPSR.ToTheTop.menus.SettingsMenu;
 import com.TfPSR.ToTheTop.menus.PauseMenu;
+import com.TfPSR.ToTheTop.network.InputPacket;
 import com.TfPSR.ToTheTop.network.PartState;
 import com.TfPSR.ToTheTop.network.PlayerState;
 import com.TfPSR.ToTheTop.network.StateInterpolator;
@@ -26,6 +27,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public class GameScreen extends ScreenAdapter {
     private static final float INPUT_INTERVAL = 1f / 60f;   // ritmo fijo de simulacion del server
     private static final int MAX_INPUTS_PER_FRAME = 5;      // evita una avalancha tras un freeze
+    private static final int EVENT_REPEAT_TICKS = 3;        // un datagrama perdido no pierde el evento
     private static final int MAX_PLAYERS = 4;
     private static final Vector2 CHARACTER_SIZE = new Vector2(0.6f, 1.80f);
     private static final float SNAPSHOT_INTERVAL = 1f / 60f;
@@ -49,6 +51,7 @@ public class GameScreen extends ScreenAdapter {
     private final Vector2 pointer = new Vector2();       // cursor virtual, en pixeles de pantalla
     private final Vector2 worldPointer = new Vector2();  // mismo punto, en metros de mundo
     private float inputAccumulator;
+    private int impulseTicksRemaining;                   // repeticiones del evento en curso
 
     /** The two newest snapshots and how far rendering is between them. */
     private StatePacket.Snapshot previousSnapshot;
@@ -220,16 +223,27 @@ public class GameScreen extends ScreenAdapter {
         updatePointer();
         inputAccumulator += delta;
 
+        if (inputProcessor.consumeImpulse())
+            impulseTicksRemaining = EVENT_REPEAT_TICKS;
+
         int sent = 0;
         while (inputAccumulator >= INPUT_INTERVAL && sent < MAX_INPUTS_PER_FRAME) {
             inputAccumulator -= INPUT_INTERVAL;
             sent++;
+
+            int events = 0;
+            if (impulseTicksRemaining > 0) {
+                events |= InputPacket.EVENT_IMPULSE;
+                impulseTicksRemaining--;
+            }
+
             network.sendInput(
                     worldPointer.x, worldPointer.y,
                     inputProcessor.isLeftMousePressed(),
                     inputProcessor.isRightMousePressed(),
                     inputProcessor.isAPressed(),
-                    inputProcessor.isDPressed());
+                    inputProcessor.isDPressed(),
+                    events);
         }
 
         // si el frame se fue muy largo, se descarta el atraso en vez de acumularlo
