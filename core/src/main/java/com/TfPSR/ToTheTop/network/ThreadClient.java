@@ -24,6 +24,7 @@ public class ThreadClient extends Thread {
     private volatile int readyCount = 0;    // ultima cantidad de listos (ROSTER)
     private volatile boolean wantReady = false; // estado pedido por la UI
     private volatile int slot = -1;         // slot que el server asigno en ACCEPT
+    private volatile int session = 0;       // id de sesion que el server asigno en ACCEPT
     private volatile StatePacket.Snapshot latestSnapshot;
 
     public ThreadClient() throws IOException {
@@ -54,6 +55,11 @@ public class ThreadClient extends Thread {
         return slot;
     }
 
+    /** Session id the server assigned to this client, or 0 before ACCEPT. */
+    public int getSession() {
+        return session;
+    }
+
     /**
      * Last state snapshot decoded from the server, or {@code null} before the
      * first one arrives. The object is immutable, so the render thread can read
@@ -66,13 +72,28 @@ public class ThreadClient extends Thread {
     public void setReady(boolean ready) {
         wantReady = ready;
         if (status == Status.ACCEPTED)
-            trySend(ready ? NetworkHeaders.READY : NetworkHeaders.UNREADY);
+            trySendSession(ready ? NetworkHeaders.READY : NetworkHeaders.UNREADY);
+    }
+
+    /** Sends a packet that carries only header, version and session. */
+    private void sendSession(byte header) throws IOException {
+        byte[] buf = new byte[]{header, ProtocolVersion.CURRENT, (byte) session};
+        DatagramPacket data = new DatagramPacket(buf, buf.length, ipServer, PORT);
+        conection.send(data);
     }
 
     private void send(byte header) throws IOException {
-        byte[] buf = new byte[]{header};
+        byte[] buf = new byte[]{header, ProtocolVersion.CURRENT};
         DatagramPacket data = new DatagramPacket(buf, buf.length, ipServer, PORT);
         conection.send(data);
+    }
+
+    private void trySendSession(byte header) {
+        try {
+            sendSession(header);
+        } catch (IOException ignored) {
+            // si no se puede enviar, el timeout del loop reintenta
+        }
     }
 
     private void trySend(byte header) {
@@ -88,7 +109,7 @@ public class ThreadClient extends Thread {
         if (!running || status != Status.STARTED)
             return;
         try {
-            byte[] buf = InputPacket.encode(mouseX, mouseY, left, right, a, d, events);
+            byte[] buf = InputPacket.encode(mouseX, mouseY, left, right, a, d, session, events);
             conection.send(new DatagramPacket(buf, buf.length, ipServer, PORT));
         } catch (IOException ignored) {
         }
@@ -135,16 +156,18 @@ public class ThreadClient extends Thread {
         switch (data[off]) {
             case NetworkHeaders.ACCEPT -> {
                 ipServer = dp.getAddress();   // ya no broadcast: se habla con el server
-                if (dp.getLength() >= off + 2)
-                    slot = data[off + 1] & 0xFF;
+                if (dp.getLength() >= off + 4 && data[off + 1] == ProtocolVersion.CURRENT) {
+                    session = data[off + 2] & 0xFF;
+                    slot = data[off + 3] & 0xFF;
+                }
                 status = Status.ACCEPTED;
                 if (wantReady)
-                    trySend(NetworkHeaders.READY);
+                    trySendSession(NetworkHeaders.READY);
             }
             case NetworkHeaders.ROSTER -> {
-                if (dp.getLength() >= 3) {
-                    players = data[off + 1] & 0xFF;
-                    readyCount = data[off + 2] & 0xFF;
+                if (dp.getLength() >= off + 4 && data[off + 1] == ProtocolVersion.CURRENT) {
+                    players = data[off + 2] & 0xFF;
+                    readyCount = data[off + 3] & 0xFF;
                 }
             }
             case NetworkHeaders.STATE -> latestSnapshot =
@@ -167,7 +190,7 @@ public class ThreadClient extends Thread {
             for (int i = 0; i < 3; i++) {
                 try {
                     byte[] buf = InputPacket.encode(0f, 0f, false, false, false, false,
-                            InputPacket.EVENT_LEAVE);
+                            session, InputPacket.EVENT_LEAVE);
                     conection.send(new DatagramPacket(buf, buf.length, ipServer, PORT));
                 } catch (IOException ignored) {
                 }
@@ -177,10 +200,11 @@ public class ThreadClient extends Thread {
     }
 
     /** Cierra el socket y corta el hilo. El server libera el slot con DISCONNECT. */
-    public void disconnect() {        running = false;
+    public void disconnect() {
+        running = false;
         try {
             if (conection != null && !conection.isClosed())
-                send(NetworkHeaders.DISCONNECT);
+                sendSession(NetworkHeaders.DISCONNECT);
         } catch (IOException ignored) {
             // si no se puede avisar, el server lo detecta por timeout
         }
