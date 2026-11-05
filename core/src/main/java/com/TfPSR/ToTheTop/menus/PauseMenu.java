@@ -67,6 +67,7 @@ public class PauseMenu {
             public void changed(ChangeEvent event, Actor actor) {
                 assetService.getAudioManager().playSound(assetService.get(SoundAsset.CLICK_BUTTON));
                 stage.getRoot().setVisible(false);
+                gameScreen.leaveMatch();
                 game.setScreen(MainMenu.class);
             }
         });

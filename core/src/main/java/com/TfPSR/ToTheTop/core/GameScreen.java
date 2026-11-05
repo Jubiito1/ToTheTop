@@ -50,7 +50,8 @@ public class GameScreen extends ScreenAdapter {
     private final Vector2 pointer = new Vector2();       // cursor virtual, en pixeles de pantalla
     private final Vector2 worldPointer = new Vector2();  // mismo punto, en metros de mundo
     private float inputAccumulator;
-    private int impulseTicksRemaining;                   // repeticiones del evento en curso
+    private int pendingEvents;                           // eventos a repetir en los proximos ticks
+    private int eventTicksRemaining;
 
     private StatePacket.Snapshot previousSnapshot;
     private StatePacket.Snapshot currentSnapshot;
@@ -96,8 +97,7 @@ public class GameScreen extends ScreenAdapter {
             Gdx.gl.glClearColor(0, 0, 0, 1);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-            if(!paused)
-                update(delta);
+            update(delta);
             draw();
     }
 
@@ -207,11 +207,13 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void sendInput(float delta) {
-        updatePointer();
+        if (!paused)
+            updatePointer();
+
         inputAccumulator += delta;
 
-        if (inputProcessor.consumeImpulse())
-            impulseTicksRemaining = EVENT_REPEAT_TICKS;
+        if (!paused && inputProcessor.consumeImpulse())
+            queueEvent(InputPacket.EVENT_IMPULSE);
 
         int sent = 0;
         while (inputAccumulator >= INPUT_INTERVAL && sent < MAX_INPUTS_PER_FRAME) {
@@ -219,17 +221,22 @@ public class GameScreen extends ScreenAdapter {
             sent++;
 
             int events = 0;
-            if (impulseTicksRemaining > 0) {
-                events |= InputPacket.EVENT_IMPULSE;
-                impulseTicksRemaining--;
+            if (eventTicksRemaining > 0) {
+                events = pendingEvents;
+                eventTicksRemaining--;
+                if (eventTicksRemaining == 0)
+                    pendingEvents = 0;
             }
 
+            // Mientras esta pausado no manda botones ni teclas, pero el tick
+            // sigue saliendo para entregar los eventos de pausa y reanudacion.
+            boolean active = !paused;
             network.sendInput(
                     worldPointer.x, worldPointer.y,
-                    inputProcessor.isLeftMousePressed(),
-                    inputProcessor.isRightMousePressed(),
-                    inputProcessor.isAPressed(),
-                    inputProcessor.isDPressed(),
+                    active && inputProcessor.isLeftMousePressed(),
+                    active && inputProcessor.isRightMousePressed(),
+                    active && inputProcessor.isAPressed(),
+                    active && inputProcessor.isDPressed(),
                     events);
         }
 
@@ -257,6 +264,7 @@ public class GameScreen extends ScreenAdapter {
         if(paused)
             return;
 
+        queueEvent(InputPacket.EVENT_PAUSE);
         inputProcessor.resetMouseButtons();
         paused = true;
         pauseMenu.open();
@@ -266,8 +274,20 @@ public class GameScreen extends ScreenAdapter {
         if(!paused)
             return;
 
+        queueEvent(InputPacket.EVENT_RESUME);
         paused = false;
         pauseMenu.close();
+    }
+
+    /** Leaves the match for good: the server frees this slot and gets a roster. */
+    public void leaveMatch(){
+        network.leave();
+    }
+
+    /** Marks an event to be repeated for a few ticks instead of once. */
+    private void queueEvent(int event) {
+        pendingEvents |= event;
+        eventTicksRemaining = EVENT_REPEAT_TICKS;
     }
 
     @Override
