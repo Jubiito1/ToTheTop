@@ -9,6 +9,7 @@ import com.TfPSR.ToTheTop.menus.SettingsMenu;
 import com.TfPSR.ToTheTop.menus.PauseMenu;
 import com.TfPSR.ToTheTop.network.PartState;
 import com.TfPSR.ToTheTop.network.PlayerState;
+import com.TfPSR.ToTheTop.network.StateInterpolator;
 import com.TfPSR.ToTheTop.network.StatePacket;
 import com.TfPSR.ToTheTop.network.ThreadClient;
 import com.badlogic.gdx.Gdx;
@@ -27,6 +28,7 @@ public class GameScreen extends ScreenAdapter {
     private static final int MAX_INPUTS_PER_FRAME = 5;      // evita una avalancha tras un freeze
     private static final int MAX_PLAYERS = 4;
     private static final Vector2 CHARACTER_SIZE = new Vector2(0.6f, 1.80f);
+    private static final float SNAPSHOT_INTERVAL = 1f / 60f;
 
     private final Main game;
     private final Viewport viewport;
@@ -47,6 +49,11 @@ public class GameScreen extends ScreenAdapter {
     private final Vector2 pointer = new Vector2();       // cursor virtual, en pixeles de pantalla
     private final Vector2 worldPointer = new Vector2();  // mismo punto, en metros de mundo
     private float inputAccumulator;
+
+    /** The two newest snapshots and how far rendering is between them. */
+    private StatePacket.Snapshot previousSnapshot;
+    private StatePacket.Snapshot currentSnapshot;
+    private float snapshotAge;
 
 
     private final GameInputProcessor inputProcessor;
@@ -118,21 +125,42 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void update(float delta) {
-        applySnapshot();
+        updateSnapshot(delta);
         centerCameraOnPlayers();
         sendInput(delta);
     }
 
     /**
-     * Copies the last snapshot the network thread decoded onto the sprites. The
-     * client never simulates: it only places each body where the server says it
-     * is. A slot is created lazily on the first snapshot that mentions it.
+     * Keeps the two newest snapshots and renders a blend of them. Without this,
+     * the sprites would jump to a new pose every received packet; with it, the
+     * render thread shows the pose between the last two snapshots the server
+     * produced. A slot that appears for the first time is shown as it is.
      */
-    private void applySnapshot() {
-        StatePacket.Snapshot snapshot = network.getSnapshot();
-        if (snapshot == null)
+    private void updateSnapshot(float delta) {
+        StatePacket.Snapshot incoming = network.getSnapshot();
+        if (incoming != null && incoming != currentSnapshot) {
+            previousSnapshot = currentSnapshot;
+            currentSnapshot = incoming;
+            snapshotAge = 0f;
+        }
+
+        if (currentSnapshot == null)
             return;
 
+        snapshotAge += delta;
+        float alpha = Math.min(1f, snapshotAge / SNAPSHOT_INTERVAL);
+
+        applySnapshot(previousSnapshot == null
+                ? currentSnapshot
+                : StateInterpolator.interpolate(previousSnapshot, currentSnapshot, alpha));
+    }
+
+    /**
+     * Copies a snapshot onto the sprites. The client never simulates: it only
+     * places each body where the server says it is. A slot is created lazily on
+     * the first snapshot that mentions it.
+     */
+    private void applySnapshot(StatePacket.Snapshot snapshot) {
         for (PlayerState state : snapshot.players()) {
             int slot = state.slot();
             if (slot < 0 || slot >= players.length || state.parts().length == 0)
