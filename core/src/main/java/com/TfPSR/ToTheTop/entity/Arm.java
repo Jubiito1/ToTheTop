@@ -42,12 +42,25 @@ public class Arm {
     }
 
     public void applyState(Vector2 upperPos, float upperAngle, Vector2 forePos, float foreAngle, Vector2 handPos, float handAngle) {
-        applySegment(spriteUpperArm, upperPos, upperAngle);
-        applySegment(spriteForearm, forePos, foreAngle);
-        applySegment(spriteHand, handPos, handAngle);
+        applySegment(0, upperPos, upperAngle);
+        applySegment(1, forePos, foreAngle);
+        applySegment(2, handPos, handAngle);
     }
 
-    private void applySegment(Sprite sprite, Vector2 pos, float angleDeg) {
+    /**
+     * Places one segment of the arm. The state packet sends the three bodies in
+     * order: 0 upper arm, 1 forearm, 2 hand.
+     */
+    public void applySegment(int segment, Vector2 pos, float angleDeg) {
+        Sprite sprite = switch (segment) {
+            case 0 -> spriteUpperArm;
+            case 1 -> spriteForearm;
+            case 2 -> spriteHand;
+            default -> null;
+        };
+        if (sprite == null)
+            return;
+
         sprite.setPosition(pos.x - sprite.getWidth() / 2f, pos.y - sprite.getHeight() / 2f);
         sprite.setRotation(angleDeg);
     }

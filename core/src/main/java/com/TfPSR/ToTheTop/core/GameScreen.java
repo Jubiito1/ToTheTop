@@ -8,6 +8,9 @@ import com.TfPSR.ToTheTop.input.GameInputProcessor;
 import com.TfPSR.ToTheTop.map.GameMap;
 import com.TfPSR.ToTheTop.menus.SettingsMenu;
 import com.TfPSR.ToTheTop.menus.PauseMenu;
+import com.TfPSR.ToTheTop.network.PartState;
+import com.TfPSR.ToTheTop.network.PlayerState;
+import com.TfPSR.ToTheTop.network.StatePacket;
 import com.TfPSR.ToTheTop.network.ThreadClient;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
@@ -24,6 +27,8 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public class GameScreen extends ScreenAdapter {
     private static final float INPUT_INTERVAL = 1f / 60f;   // ritmo fijo de simulacion del server
     private static final int MAX_INPUTS_PER_FRAME = 5;      // evita una avalancha tras un freeze
+    private static final int MAX_PLAYERS = 4;
+    private static final Vector2 CHARACTER_SIZE = new Vector2(0.6f, 1.80f);
 
     private final Vector2 GRAVEDAD = new Vector2(0, -9.8f);
 
@@ -32,7 +37,9 @@ public class GameScreen extends ScreenAdapter {
     private final OrthographicCamera camera;
     private final Batch batch;
 
-    private final Character player;
+    /** One character per slot, created from the first snapshot that mentions it. */
+    private final Character[] players = new Character[MAX_PLAYERS];
+    private final Vector2 spawn;
 
     private final GameMap map;
     private final OrthogonalTiledMapRenderer mapRenderer;
@@ -68,8 +75,7 @@ public class GameScreen extends ScreenAdapter {
         map = new GameMap("maps/map.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map.getTiledMap(), 1f / Constants.PIXELS_PER_METER);
 
-
-        player = new Character( map.getPlayerSpawn(), new Vector2(0.6f, 1.80f));
+        spawn = map.getPlayerSpawn();
 
         // el cursor esta capturado: el puntero real no es una posicion valida, asi
         // que se reconstruye acumulando deltas y se arranca desde el centro
@@ -102,7 +108,10 @@ public class GameScreen extends ScreenAdapter {
         mapRenderer.render();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        player.draw(batch);
+        for (Character character : players) {
+            if (character != null)
+                character.draw(batch);
+        }
 
         batch.end();
 
@@ -115,11 +124,70 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void update(float delta) {
-        camera.position.set(player.getPosition().x, player.getPosition().y, 0);
+        applySnapshot();
+        centerCameraOnPlayers();
+        sendInput(delta);
+    }
+
+    /**
+     * Copies the last snapshot the network thread decoded onto the sprites. The
+     * client never simulates: it only places each body where the server says it
+     * is. A slot is created lazily on the first snapshot that mentions it.
+     */
+    private void applySnapshot() {
+        StatePacket.Snapshot snapshot = network.getSnapshot();
+        if (snapshot == null)
+            return;
+
+        for (PlayerState state : snapshot.players()) {
+            int slot = state.slot();
+            if (slot < 0 || slot >= players.length || state.parts().length == 0)
+                continue;
+
+            Character character = players[slot];
+            if (character == null) {
+                PartState head = state.parts()[0];
+                character = new Character(new Vector2(head.x(), head.y()), new Vector2(CHARACTER_SIZE));
+                players[slot] = character;
+            }
+
+            for (int i = 0; i < state.parts().length; i++) {
+                PartState part = state.parts()[i];
+                character.applyPartState(i, new Vector2(part.x(), part.y()), part.angleDegrees());
+            }
+        }
+    }
+
+    /** Keeps the camera on every received character, or on the spawn while waiting. */
+    private void centerCameraOnPlayers() {
+        boolean found = false;
+        float minX = 0, maxX = 0, minY = 0, maxY = 0;
+
+        for (Character character : players) {
+            if (character == null)
+                continue;
+
+            Vector2 position = character.getPosition();
+            if (!found) {
+                minX = maxX = position.x;
+                minY = maxY = position.y;
+                found = true;
+            } else {
+                minX = Math.min(minX, position.x);
+                maxX = Math.max(maxX, position.x);
+                minY = Math.min(minY, position.y);
+                maxY = Math.max(maxY, position.y);
+            }
+        }
+
+        if (!found) {
+            camera.position.set(spawn.x, spawn.y, 0);
+        } else {
+            camera.position.set((minX + maxX) / 2f, (minY + maxY) / 2f, 0);
+        }
+
         camera.zoom = 1.5f;
         camera.update();
-
-        sendInput(delta);
     }
 
     /**

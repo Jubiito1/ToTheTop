@@ -68,13 +68,24 @@ public class Character {
 
     public void applyPartState(int partIndex, Vector2 pos, float angleDeg) {
         switch (partIndex) {
-            //case HEAD:      applySegment(spriteHead, pos, angleDeg); break;
-            //case TORSO:     applySegment(spriteTorso, pos, angleDeg); break;
-            //case LEFT_LEG:  applySegment(spriteLeftLeg, pos, angleDeg); break;
-            //case RIGHT_LEG: applySegment(spriteRightLeg, pos, angleDeg); break;
-            //case LEFT_ARM:  leftArm.applyState(...);  break;   // sub-array de segmentos
-            //case RIGHT_ARM: rightArm.applyState(...); break;
+            case 0 -> {
+                applySegment(spriteHead, pos, angleDeg);
+                position.set(pos);          // the head is the camera anchor
+            }
+            case 1 -> applySegment(spriteTorso, pos, angleDeg);
+            case 2, 3, 4 -> leftArm.applySegment(partIndex - 2, pos, angleDeg);
+            case 5, 6, 7 -> rightArm.applySegment(partIndex - 5, pos, angleDeg);
+            case 8 -> applySegment(spriteLeftLeg, pos, angleDeg);
+            case 9 -> applySegment(spriteRightLeg, pos, angleDeg);
+            default -> {
+                // Unknown part: ignore it instead of breaking the frame.
+            }
         }
+    }
+
+    private void applySegment(Sprite sprite, Vector2 pos, float angleDeg) {
+        sprite.setPosition(pos.x - sprite.getWidth() / 2f, pos.y - sprite.getHeight() / 2f);
+        sprite.setRotation(angleDeg);
     }
 
     public void draw(Batch batch) {

@@ -23,6 +23,8 @@ public class ThreadClient extends Thread {
     private volatile int players = 0;      // ultima cantidad de conectados (ROSTER)
     private volatile int readyCount = 0;    // ultima cantidad de listos (ROSTER)
     private volatile boolean wantReady = false; // estado pedido por la UI
+    private volatile int slot = -1;         // slot que el server asigno en ACCEPT
+    private volatile StatePacket.Snapshot latestSnapshot;
 
     public ThreadClient() throws IOException {
         ipServer = InetAddress.getByName("255.255.255.255");
@@ -45,6 +47,20 @@ public class ThreadClient extends Thread {
 
     public int getReadyCount() {
         return readyCount;
+    }
+
+    /** Slot the server assigned to this client, or -1 before ACCEPT. */
+    public int getSlot() {
+        return slot;
+    }
+
+    /**
+     * Last state snapshot decoded from the server, or {@code null} before the
+     * first one arrives. The object is immutable, so the render thread can read
+     * it without locking.
+     */
+    public StatePacket.Snapshot getSnapshot() {
+        return latestSnapshot;
     }
 
     public void setReady(boolean ready) {
@@ -119,6 +135,8 @@ public class ThreadClient extends Thread {
         switch (data[off]) {
             case NetworkHeaders.ACCEPT -> {
                 ipServer = dp.getAddress();   // ya no broadcast: se habla con el server
+                if (dp.getLength() >= off + 2)
+                    slot = data[off + 1] & 0xFF;
                 status = Status.ACCEPTED;
                 if (wantReady)
                     trySend(NetworkHeaders.READY);
@@ -129,6 +147,8 @@ public class ThreadClient extends Thread {
                     readyCount = data[off + 2] & 0xFF;
                 }
             }
+            case NetworkHeaders.STATE -> latestSnapshot =
+                    StatePacket.decode(data, off, dp.getLength());
             case NetworkHeaders.REJECT -> status = Status.REJECTED;
             case NetworkHeaders.START -> {
                 status = Status.STARTED;
