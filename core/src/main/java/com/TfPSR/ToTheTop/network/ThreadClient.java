@@ -157,9 +157,27 @@ public class ThreadClient extends Thread {
         }
     }
 
+    /**
+     * Leaves the match: the event travels in the input packet, repeated a few
+     * times so a lost datagram does not keep the slot open, and then the socket
+     * is closed. The server also frees the slot through {@code DISCONNECT}.
+     */
+    public void leave() {
+        if (status == Status.STARTED) {
+            for (int i = 0; i < 3; i++) {
+                try {
+                    byte[] buf = InputPacket.encode(0f, 0f, false, false, false, false,
+                            InputPacket.EVENT_LEAVE);
+                    conection.send(new DatagramPacket(buf, buf.length, ipServer, PORT));
+                } catch (IOException ignored) {
+                }
+            }
+        }
+        disconnect();
+    }
+
     /** Cierra el socket y corta el hilo. El server libera el slot con DISCONNECT. */
-    public void disconnect() {
-        running = false;
+    public void disconnect() {        running = false;
         try {
             if (conection != null && !conection.isClosed())
                 send(NetworkHeaders.DISCONNECT);
