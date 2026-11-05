@@ -2,7 +2,6 @@ package com.TfPSR.ToTheTop.core;
 
 import com.TfPSR.ToTheTop.*;
 import com.TfPSR.ToTheTop.asset.AssetService;
-import com.TfPSR.ToTheTop.asset.SoundAsset;
 import com.TfPSR.ToTheTop.entity.Character;
 import com.TfPSR.ToTheTop.input.GameInputProcessor;
 import com.TfPSR.ToTheTop.map.GameMap;
@@ -15,7 +14,6 @@ import com.TfPSR.ToTheTop.network.ThreadClient;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -30,8 +28,6 @@ public class GameScreen extends ScreenAdapter {
     private static final int MAX_PLAYERS = 4;
     private static final Vector2 CHARACTER_SIZE = new Vector2(0.6f, 1.80f);
 
-    private final Vector2 GRAVEDAD = new Vector2(0, -9.8f);
-
     private final Main game;
     private final Viewport viewport;
     private final OrthographicCamera camera;
@@ -45,7 +41,6 @@ public class GameScreen extends ScreenAdapter {
     private final OrthogonalTiledMapRenderer mapRenderer;
 
     private final AssetService assetService;
-    private final Sound dash;
     private final InputMultiplexer inputMultiplexer;
 
     private final ThreadClient network;
@@ -66,7 +61,6 @@ public class GameScreen extends ScreenAdapter {
         this.camera = game.getCamera();
         this.batch = game.getBatch();
         this.assetService = assetService;
-        this.dash = assetService.get(SoundAsset.DASH);
         this.inputMultiplexer = new InputMultiplexer();
         this.settingsMenu = settingsMenu;
         this.pauseMenu = new PauseMenu(assetService, game, this, settingsMenu);
