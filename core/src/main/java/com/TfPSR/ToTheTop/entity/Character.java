@@ -60,12 +60,6 @@ public class Character {
         return sprite;
     }
 
-    public void applyArmState(boolean isLeft, Vector2 upperPos, float upperAngle, Vector2 forePos, float foreAngle, Vector2 handPos, float handAngle) {
-        Arm arm = isLeft ? leftArm : rightArm;
-        arm.applyState(upperPos, upperAngle, forePos, foreAngle, handPos, handAngle);
-    }
-
-
     public void applyPartState(int partIndex, Vector2 pos, float angleDeg) {
         switch (partIndex) {
             case 0 -> {
@@ -98,16 +92,7 @@ public class Character {
     }
 
 
-    public void update(Vector2 mouseVelocity, boolean leftMousePressed, boolean rightMousePressed) {
-        if (leftMousePressed) {
-        }
-
-        if (rightMousePressed) {
-        }
-    }
-
     public Vector2 getPosition() {return position;}
-    public void setRootPosition(Vector2 p) { this.position.set(p); }
 }
 
 

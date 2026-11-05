@@ -41,13 +41,10 @@ public class Arm {
         return sprite;
     }
 
-    public void applyState(Vector2 upperPos, float upperAngle, Vector2 forePos, float foreAngle, Vector2 handPos, float handAngle) {
-        applySegment(0, upperPos, upperAngle);// A simply refactor of the way we apply the sprite
-        applySegment(1, forePos, foreAngle);
-        applySegment(2, handPos, handAngle);
-    }
-
-
+    /**
+     * Places one segment of the arm. The state packet sends the three bodies in
+     * order: 0 upper arm, 1 forearm, 2 hand.
+     */
     public void applySegment(int segment, Vector2 pos, float angleDeg) {
         Sprite sprite = switch (segment) {
             case 0 -> spriteUpperArm;
