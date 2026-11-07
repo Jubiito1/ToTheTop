@@ -1,8 +1,5 @@
 package com.TfPSR.ToTheTop.network;
 
-/**
- * State of one body part as it arrives from the server: world meters and
- * degrees. Mirrors the server record of the same name.
- */
+//Te define the way we will receive all the information of the bodyparts
 public record PartState(float x, float y, float angleDegrees) {
 }

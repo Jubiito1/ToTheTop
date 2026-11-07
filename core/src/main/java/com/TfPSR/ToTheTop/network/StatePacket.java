@@ -2,19 +2,10 @@ package com.TfPSR.ToTheTop.network;
 
 import java.nio.ByteBuffer;
 
-/**
- * Wire format of the match state the server broadcasts at a fixed tick.
- * Mirrors {@code StatePacket} in the server repository; see
- * {@code odd/tasks/server-state-sync.md} there for the full contract.
- *
- * <p>Coordinates are world meters and angles are degrees. Body parts always
- * arrive in this order: head, torso, left upper arm, left forearm, left hand,
- * right upper arm, right forearm, right hand, left leg, right leg.
- *
- * <p>Decoding returns {@code null} for anything malformed: a bad datagram must
- * never be able to break the render loop.
- */
 public final class StatePacket {
+
+    //Here we collect all the relevant information from the match to update and compare the information and values of
+    //the entities
 
     public static final byte MATCH_RUNNING = 0;
     public static final byte MATCH_FINISHED = 1;
@@ -34,16 +25,10 @@ public final class StatePacket {
     private StatePacket() {
     }
 
-    /**
-     * One complete snapshot: the overall match state and every player in it.
-     * Immutable once built, so it can be handed from the network thread to the
-     * render thread without locking.
-     */
     public record Snapshot(byte matchState, byte result, byte environmentMask,
                            PlayerState[] players) {
     }
 
-    /** Decodes one received datagram, or returns {@code null} when invalid. */
     public static Snapshot decode(byte[] data, int offset, int length) {
         if (data == null || length < HEADER_SIZE)
             return null;
@@ -86,8 +71,6 @@ public final class StatePacket {
                     (flags & FLAG_UNCONSCIOUS) != 0);
         }
 
-        // Reserved fields of the current layout: no result and no environment
-        // event is produced yet, but the client already exposes them.
         return new Snapshot(matchState, RESULT_NONE, (byte) 0, players);
     }
 }

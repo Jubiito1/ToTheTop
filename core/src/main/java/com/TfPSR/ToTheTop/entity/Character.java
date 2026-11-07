@@ -78,7 +78,6 @@ public class Character {
             case 8 -> applySegment(spriteLeftLeg, pos, angleDeg);
             case 9 -> applySegment(spriteRightLeg, pos, angleDeg);
             default -> {
-                // Unknown part: ignore it instead of breaking the frame.
             }
         }
     }

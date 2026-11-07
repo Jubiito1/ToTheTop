@@ -37,7 +37,6 @@ public class GameScreen extends ScreenAdapter {
     private final OrthographicCamera camera;
     private final Batch batch;
 
-    /** One character per slot, created from the first snapshot that mentions it. */
     private final Character[] players = new Character[MAX_PLAYERS];
     private final Vector2 spawn;
 
@@ -75,10 +74,8 @@ public class GameScreen extends ScreenAdapter {
         map = new GameMap("maps/map.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map.getTiledMap(), 1f / Constants.PIXELS_PER_METER);
 
-        spawn = map.getPlayerSpawn();
+        spawn = map.getPlayerSpawn(); // We change the creation of the character, with exact values, for a posterior creation of the character
 
-        // el cursor esta capturado: el puntero real no es una posicion valida, asi
-        // que se reconstruye acumulando deltas y se arranca desde el centro
         pointer.set(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f);
 
         inputProcessor = new GameInputProcessor(this);
@@ -108,7 +105,7 @@ public class GameScreen extends ScreenAdapter {
         mapRenderer.render();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        for (Character character : players) {
+        for (Character character : players) {  //We replace the single draw with a array draw
             if (character != null)
                 character.draw(batch);
         }
@@ -124,18 +121,13 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void update(float delta) {
-        applySnapshot();
-        centerCameraOnPlayers();
+        applySnapshot(); //Using a snap of the current state of the match we update all the body parts
+        centerCameraOnPlayers(); //We change it because of the quantity of players
         sendInput(delta);
     }
 
-    /**
-     * Copies the last snapshot the network thread decoded onto the sprites. The
-     * client never simulates: it only places each body where the server says it
-     * is. A slot is created lazily on the first snapshot that mentions it.
-     */
     private void applySnapshot() {
-        StatePacket.Snapshot snapshot = network.getSnapshot();
+        StatePacket.Snapshot snapshot = network.getSnapshot();  //it gets the last snap to manage the loop
         if (snapshot == null)
             return;
 
@@ -158,7 +150,7 @@ public class GameScreen extends ScreenAdapter {
         }
     }
 
-    /** Keeps the camera on every received character, or on the spawn while waiting. */
+
     private void centerCameraOnPlayers() {
         boolean found = false;
         float minX = 0, maxX = 0, minY = 0, maxY = 0;
@@ -190,10 +182,7 @@ public class GameScreen extends ScreenAdapter {
         camera.update();
     }
 
-    /**
-     * Manda el input a ritmo fijo (60 Hz) y no una vez por frame, para que el
-     * server reciba un flujo estable aunque el render vaya a otra tasa.
-     */
+
     private void sendInput(float delta) {
         updatePointer();
         inputAccumulator += delta;
@@ -210,16 +199,11 @@ public class GameScreen extends ScreenAdapter {
                     inputProcessor.isDPressed());
         }
 
-        // si el frame se fue muy largo, se descarta el atraso en vez de acumularlo
+        // if the frame has been so long it removes it
         if (inputAccumulator > INPUT_INTERVAL * MAX_INPUTS_PER_FRAME)
             inputAccumulator = 0f;
     }
 
-    /**
-     * Convierte el cursor capturado en una posicion absoluta de mundo. Acumula
-     * los deltas porque GLFW no reporta un cursor real cuando esta capturado, y
-     * lo limita a la pantalla para que el puntero no se escape del viewport.
-     */
     private void updatePointer() {
         Vector2 delta = inputProcessor.getMouseDelta();
         pointer.x = MathUtils.clamp(pointer.x + delta.x, 0f, Gdx.graphics.getWidth());

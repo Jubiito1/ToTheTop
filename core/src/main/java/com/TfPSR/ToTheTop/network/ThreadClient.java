@@ -49,16 +49,6 @@ public class ThreadClient extends Thread {
         return readyCount;
     }
 
-    /** Slot the server assigned to this client, or -1 before ACCEPT. */
-    public int getSlot() {
-        return slot;
-    }
-
-    /**
-     * Last state snapshot decoded from the server, or {@code null} before the
-     * first one arrives. The object is immutable, so the render thread can read
-     * it without locking.
-     */
     public StatePacket.Snapshot getSnapshot() {
         return latestSnapshot;
     }
@@ -134,21 +124,21 @@ public class ThreadClient extends Thread {
 
         switch (data[off]) {
             case NetworkHeaders.ACCEPT -> {
-                ipServer = dp.getAddress();   // ya no broadcast: se habla con el server
+                ipServer = dp.getAddress();
                 if (dp.getLength() >= off + 2)
-                    slot = data[off + 1] & 0xFF;
+                    slot = data[off + 1] & 0xFF; // We use this 0xFF as a converter from bytes to int
                 status = Status.ACCEPTED;
                 if (wantReady)
                     trySend(NetworkHeaders.READY);
             }
             case NetworkHeaders.ROSTER -> {
                 if (dp.getLength() >= 3) {
-                    players = data[off + 1] & 0xFF;
-                    readyCount = data[off + 2] & 0xFF;
+                    players = data[off + 1] & 0xFF; // We use this 0xFF as a converter from bytes to int
+                    readyCount = data[off + 2] & 0xFF; // We use this 0xFF as a converter from bytes to int
                 }
             }
             case NetworkHeaders.STATE -> latestSnapshot =
-                    StatePacket.decode(data, off, dp.getLength());
+                    StatePacket.decode(data, off, dp.getLength()); //If the 'header' of the package is state, we decode it and save it into a lastSnapshot type
             case NetworkHeaders.REJECT -> status = Status.REJECTED;
             case NetworkHeaders.START -> {
                 status = Status.STARTED;
