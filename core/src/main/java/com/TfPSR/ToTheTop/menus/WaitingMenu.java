@@ -40,6 +40,8 @@ public class WaitingMenu extends ScreenAdapter {
     private final Stage stage;
     private final Label statusLabel;
     private final Label roomLabel;
+    private final TextButton startButton;
+    private final Cell<TextButton> startCell;
     private float time;
     private ThreadClient threadClient;
     private boolean ready = false;
@@ -91,6 +93,15 @@ public class WaitingMenu extends ScreenAdapter {
             }
         });
 
+        // El anfitrion es el unico que puede arrancar la partida.
+        this.startButton = new TextButton("EMPEZAR PARTIDA", skin);
+        startButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                threadClient.requestStart();
+            }
+        });
+
         Table table = new Table();
         table.setFillParent(true);
         table.top();
@@ -101,6 +112,8 @@ public class WaitingMenu extends ScreenAdapter {
         table.add(roomLabel).padTop(12);
         table.row();
         table.add(readyButton).width(220).height(55).padTop(30);
+        table.row();
+        this.startCell = table.add(startButton).width(220).height(55).padTop(15);
         table.row();
         table.add(cancelButton).width(220).height(55).padTop(15);
         stage.addActor(table);
@@ -162,6 +175,12 @@ public class WaitingMenu extends ScreenAdapter {
 
         String code = threadClient.getRoomCode();
         roomLabel.setText("Sala: " + (code.isEmpty() ? "----" : code));
+
+        // El boton solo existe para el anfitrion, con la sala unida y dos listos.
+        boolean canStart = threadClient.isHost()
+                && threadClient.getStatus() == ThreadClient.Status.ACCEPTED
+                && threadClient.getReadyCount() >= 2;
+        startCell.setActor(canStart ? startButton : null);
 
         camera.update();
         batch.setProjectionMatrix(camera.combined);
