@@ -93,6 +93,16 @@ public class Character {
         spriteTorso.draw(batch);
     }
 
+    /** Frees the textures of every part; the character is gone from the match. */
+    public void dispose() {
+        spriteHead.getTexture().dispose();
+        spriteTorso.getTexture().dispose();
+        spriteLeftLeg.getTexture().dispose();
+        spriteRightLeg.getTexture().dispose();
+        leftArm.dispose();
+        rightArm.dispose();
+    }
+
     /** Tints every part with the colour the roster assigned to this slot. */
     public void setTint(Color color) {
         spriteHead.setColor(color);

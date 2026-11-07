@@ -5,6 +5,7 @@ import com.TfPSR.ToTheTop.asset.AssetService;
 import com.TfPSR.ToTheTop.entity.Character;
 import com.TfPSR.ToTheTop.input.GameInputProcessor;
 import com.TfPSR.ToTheTop.map.GameMap;
+import com.TfPSR.ToTheTop.menus.MainMenu;
 import com.TfPSR.ToTheTop.menus.SettingsMenu;
 import com.TfPSR.ToTheTop.menus.PauseMenu;
 import com.TfPSR.ToTheTop.network.InputPacket;
@@ -120,6 +121,13 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
+            if (network.isConnectionLost()) {
+                // The server stopped answering: the match cannot continue.
+                network.disconnect();
+                game.setScreen(MainMenu.class);
+                return;
+            }
+
             Gdx.gl.glClearColor(0, 0, 0, 1);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
@@ -227,6 +235,15 @@ public class GameScreen extends ScreenAdapter {
                 continue;
             slotTints[slot].set(entry.color());
             slotLabels[slot].setText(nameFont, entry.name());
+        }
+
+        // A slot that is no longer in the roster left the match: its body must
+        // disappear instead of staying frozen where the last state left it.
+        for (int slot = 0; slot < MAX_PLAYERS; slot++) {
+            if (players[slot] == null || current.entry(slot) != null)
+                continue;
+            players[slot].dispose();
+            players[slot] = null;
         }
     }
 

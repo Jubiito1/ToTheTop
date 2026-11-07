@@ -74,5 +74,12 @@ public class Arm {
         spriteHand.setColor(color);
     }
 
+    /** Frees the textures of the three segments. */
+    public void dispose() {
+        spriteUpperArm.getTexture().dispose();
+        spriteForearm.getTexture().dispose();
+        spriteHand.getTexture().dispose();
+    }
+
 }
 

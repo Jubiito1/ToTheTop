@@ -147,6 +147,13 @@ public class WaitingMenu extends ScreenAdapter {
             return;
         }
 
+        if (threadClient.isConnectionLost()) {
+            // el server dejo de responder: no hay sala a la que volver
+            threadClient.disconnect();
+            game.setScreen(MainMenu.class);
+            return;
+        }
+
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 

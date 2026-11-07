@@ -14,7 +14,18 @@ public class ThreadClient extends Thread {
     public enum Status { SEARCHING, ACCEPTED, REJECTED, STARTED }
 
     private static final int PORT = 6767;
-    private static final int TIMEOUT_MS = 3000;
+
+    /** Socket poll: nothing blocks forever, so the keepalive can run. */
+    private static final int POLL_MS = 250;
+
+    /** How often a handshake is retried while there is no room yet. */
+    private static final long HANDSHAKE_INTERVAL_MS = 2000;
+
+    /** How often a joined client tells the server it is still there. */
+    private static final long PING_INTERVAL_MS = 1000;
+
+    /** Silence after which the server is considered gone. */
+    private static final long SERVER_TIMEOUT_MS = 5000;
 
     private final DatagramSocket conection;
     private InetAddress ipServer;
@@ -33,11 +44,19 @@ public class ThreadClient extends Thread {
     private volatile Roster roster = Roster.empty(); // quien esta en la sala y de que color
     private volatile StatePacket.Snapshot latestSnapshot;
 
+    /** Keepalive bookkeeping: last packet received, last ping sent, last handshake. */
+    private volatile long lastPacketAt = System.currentTimeMillis();
+    private long lastPingAt;
+    private long lastHandshakeAt;
+
+    /** Set when the server stops answering, so the screens can go back to the menu. */
+    private volatile boolean connectionLost = false;
+
     public ThreadClient() throws IOException {
         ipServer = InetAddress.getByName("255.255.255.255");
         try {
             conection = new DatagramSocket();
-            conection.setSoTimeout(TIMEOUT_MS);
+            conection.setSoTimeout(POLL_MS);
             // El primer paso es preguntar quien hay en la red, y eso se manda
             // a la direccion de broadcast.
             conection.setBroadcast(true);
@@ -62,6 +81,16 @@ public class ThreadClient extends Thread {
     /** Slot the server assigned to this client, or -1 before ACCEPT. */
     public int getSlot() {
         return slot;
+    }
+
+    /** Slot 0 is the host: only it asks the server to start the match. */
+    public boolean isHost() {
+        return slot == 0;
+    }
+
+    /** True when the server stopped answering and the connection must be abandoned. */
+    public boolean isConnectionLost() {
+        return connectionLost;
     }
 
     /** Session id the server assigned to this client, or 0 before ACCEPT. */
@@ -107,6 +136,12 @@ public class ThreadClient extends Thread {
         wantReady = ready;
         if (status == Status.ACCEPTED)
             trySendSession(ready ? NetworkHeaders.READY : NetworkHeaders.UNREADY);
+    }
+
+    /** Hosts only: asks the server to start the match with the ready players. */
+    public void requestStart() {
+        if (status == Status.ACCEPTED && isHost())
+            trySendSession(NetworkHeaders.START_REQUEST);
     }
 
     /** Sends a packet that carries only header, version and session. */
@@ -175,11 +210,12 @@ public class ThreadClient extends Thread {
     public void run() {
         // Primero se pregunta quien hay en la red: el CONNECT necesita el codigo
         // de sala, y ese codigo solo llega con el ANNOUNCE.
+        lastHandshakeAt = System.currentTimeMillis();
         trySendDiscover();
 
         while (running) {
             try {
-                byte[] buf = new byte[1024];
+                byte[] buf = new byte[2048];
                 DatagramPacket dp = new DatagramPacket(buf, buf.length);
                 conection.receive(dp);
                 processMessage(dp);
@@ -187,14 +223,8 @@ public class ThreadClient extends Thread {
                 if (status == Status.REJECTED)
                     return;
             } catch (SocketTimeoutException e) {
-                // el socket tiene que quedar abierto durante la partida para seguir
-                // mandando input; solo se reintenta el handshake mientras no haya partida
-                if (!running || status == Status.STARTED)
-                    continue;
-                if (roomCode.length() == 4)
-                    trySendConnect();
-                else
-                    trySendDiscover();
+                // el socket queda abierto durante la partida para seguir mandando
+                // input; el timeout solo marca el ritmo del keepalive
             } catch (SocketException e) {
                 if (running)
                     e.printStackTrace();
@@ -204,12 +234,51 @@ public class ThreadClient extends Thread {
                     e.printStackTrace();
                 return;
             }
+
+            if (!running)
+                return;
+
+            keepalive(System.currentTimeMillis());
+            if (connectionLost)
+                return;
         }
+    }
+
+    /**
+     * Resends the handshake while the room is not joined yet, pings the server
+     * once it is, and gives up after five seconds of silence.
+     *
+     * <p>Once ACCEPTED the handshake stops: a lost ACCEPT leaves the client
+     * SEARCHING, so it keeps retrying, while a joined client relies on the
+     * keepalive instead of reopening the join every two seconds.
+     */
+    private void keepalive(long now) {
+        if (status == Status.SEARCHING && now - lastHandshakeAt >= HANDSHAKE_INTERVAL_MS) {
+            lastHandshakeAt = now;
+            if (roomCode.length() == 4)
+                trySendConnect();
+            else
+                trySendDiscover();
+        }
+
+        if (status != Status.ACCEPTED && status != Status.STARTED)
+            return;
+
+        if (now - lastPingAt >= PING_INTERVAL_MS) {
+            lastPingAt = now;
+            trySendSession(NetworkHeaders.PING);
+        }
+
+        if (now - lastPacketAt >= SERVER_TIMEOUT_MS)
+            connectionLost = true;
     }
 
     private void processMessage(DatagramPacket dp) {
         if (dp.getLength() < 1)
             return;
+
+        // Any packet from the server proves the connection is still alive.
+        lastPacketAt = System.currentTimeMillis();
 
         byte[] data = dp.getData();
         int off = dp.getOffset();
@@ -256,6 +325,9 @@ public class ThreadClient extends Thread {
             case NetworkHeaders.START -> {
                 status = Status.STARTED;
                 StartFlag.startFlag = true;   // la WaitingMenu la lee en el render thread
+            }
+            case NetworkHeaders.PONG -> {
+                // el keepalive ya se contabilizo al recibir el datagrama
             }
         }
     }
