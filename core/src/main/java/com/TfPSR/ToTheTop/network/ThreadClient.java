@@ -8,6 +8,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
 
 public class ThreadClient extends Thread {
     public enum Status { SEARCHING, ACCEPTED, REJECTED, STARTED }
@@ -25,6 +26,10 @@ public class ThreadClient extends Thread {
     private volatile boolean wantReady = false; // estado pedido por la UI
     private volatile int slot = -1;         // slot que el server asigno en ACCEPT
     private volatile int session = 0;       // id de sesion que el server asigno en ACCEPT
+    private volatile String roomCode = "";  // codigo de 4 cifras anunciado por el server
+    private volatile int maxPlayers = 4;    // cupo de la sala (ANNOUNCE)
+    private volatile boolean matchRunning = false; // la sala ya esta en partida (ANNOUNCE)
+    private volatile int rejectReason = 0;  // motivo del ultimo REJECT
     private volatile StatePacket.Snapshot latestSnapshot;
 
     public ThreadClient() throws IOException {
@@ -32,6 +37,9 @@ public class ThreadClient extends Thread {
         try {
             conection = new DatagramSocket();
             conection.setSoTimeout(TIMEOUT_MS);
+            // El primer paso es preguntar quien hay en la red, y eso se manda
+            // a la direccion de broadcast.
+            conection.setBroadcast(true);
         } catch (SocketException e) {
             e.printStackTrace();
             throw new IOException("No se pudo crear el socket del cliente", e);
@@ -60,6 +68,26 @@ public class ThreadClient extends Thread {
         return session;
     }
 
+    /** Four-digit room code announced by the server, or "" before ANNOUNCE. */
+    public String getRoomCode() {
+        return roomCode;
+    }
+
+    /** Room capacity announced by the server. */
+    public int getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    /** True when the announced room already started its match. */
+    public boolean isMatchRunning() {
+        return matchRunning;
+    }
+
+    /** Reason of the last REJECT, or 0 when there was none. */
+    public int getRejectReason() {
+        return rejectReason;
+    }
+
     /**
      * Last state snapshot decoded from the server, or {@code null} before the
      * first one arrives. The object is immutable, so the render thread can read
@@ -82,8 +110,22 @@ public class ThreadClient extends Thread {
         conection.send(data);
     }
 
-    private void send(byte header) throws IOException {
-        byte[] buf = new byte[]{header, ProtocolVersion.CURRENT};
+    /** Asks every server on the network to announce itself. */
+    private void sendDiscover() throws IOException {
+        byte[] buf = new byte[]{NetworkHeaders.DISCOVER, ProtocolVersion.CURRENT};
+        DatagramPacket data = new DatagramPacket(buf, buf.length, ipServer, PORT);
+        conection.send(data);
+    }
+
+    /**
+     * Joins the room once its code is known: CONNECT carries the room code that
+     * was announced and the player name (empty until the waiting room adds it).
+     */
+    private void sendConnect() throws IOException {
+        if (roomCode.length() != 4)
+            return;
+
+        byte[] buf = ConnectPacket.encode(roomCode, "");
         DatagramPacket data = new DatagramPacket(buf, buf.length, ipServer, PORT);
         conection.send(data);
     }
@@ -96,9 +138,17 @@ public class ThreadClient extends Thread {
         }
     }
 
-    private void trySend(byte header) {
+    private void trySendDiscover() {
         try {
-            send(header);
+            sendDiscover();
+        } catch (IOException ignored) {
+            // si no se puede enviar, el timeout del loop reintenta
+        }
+    }
+
+    private void trySendConnect() {
+        try {
+            sendConnect();
         } catch (IOException ignored) {
             // si no se puede enviar, el timeout del loop reintenta
         }
@@ -117,8 +167,9 @@ public class ThreadClient extends Thread {
 
     @Override
     public void run() {
-        // primer CONNECT: el loop solo lo repite si nadie contesta (timeout)
-        trySend(NetworkHeaders.CONNECT);
+        // Primero se pregunta quien hay en la red: el CONNECT necesita el codigo
+        // de sala, y ese codigo solo llega con el ANNOUNCE.
+        trySendDiscover();
 
         while (running) {
             try {
@@ -131,9 +182,13 @@ public class ThreadClient extends Thread {
                     return;
             } catch (SocketTimeoutException e) {
                 // el socket tiene que quedar abierto durante la partida para seguir
-                // mandando input; solo se reintenta CONNECT mientras no haya partida
-                if (running && (status == Status.SEARCHING || status == Status.ACCEPTED))
-                    trySend(NetworkHeaders.CONNECT);
+                // mandando input; solo se reintenta el handshake mientras no haya partida
+                if (!running || status == Status.STARTED)
+                    continue;
+                if (roomCode.length() == 4)
+                    trySendConnect();
+                else
+                    trySendDiscover();
             } catch (SocketException e) {
                 if (running)
                     e.printStackTrace();
@@ -154,11 +209,24 @@ public class ThreadClient extends Thread {
         int off = dp.getOffset();
 
         switch (data[off]) {
+            case NetworkHeaders.ANNOUNCE -> {
+                if (dp.getLength() >= off + 9 && data[off + 1] == ProtocolVersion.CURRENT) {
+                    ipServer = dp.getAddress();   // a partir de aca se habla con el server
+                    roomCode = new String(data, off + 2, 4, StandardCharsets.US_ASCII);
+                    players = data[off + 6] & 0xFF;
+                    matchRunning = data[off + 7] != 0;
+                    maxPlayers = data[off + 8] & 0xFF;
+
+                    if (status == Status.SEARCHING)
+                        trySendConnect();
+                }
+            }
             case NetworkHeaders.ACCEPT -> {
                 ipServer = dp.getAddress();   // ya no broadcast: se habla con el server
-                if (dp.getLength() >= off + 4 && data[off + 1] == ProtocolVersion.CURRENT) {
+                if (dp.getLength() >= off + 8 && data[off + 1] == ProtocolVersion.CURRENT) {
                     session = data[off + 2] & 0xFF;
                     slot = data[off + 3] & 0xFF;
+                    roomCode = new String(data, off + 4, 4, StandardCharsets.US_ASCII);
                 }
                 status = Status.ACCEPTED;
                 if (wantReady)
@@ -172,7 +240,11 @@ public class ThreadClient extends Thread {
             }
             case NetworkHeaders.STATE -> latestSnapshot =
                     StatePacket.decode(data, off, dp.getLength());
-            case NetworkHeaders.REJECT -> status = Status.REJECTED;
+            case NetworkHeaders.REJECT -> {
+                if (dp.getLength() >= off + 3)
+                    rejectReason = data[off + 2] & 0xFF;
+                status = Status.REJECTED;
+            }
             case NetworkHeaders.START -> {
                 status = Status.STARTED;
                 StartFlag.startFlag = true;   // la WaitingMenu la lee en el render thread
