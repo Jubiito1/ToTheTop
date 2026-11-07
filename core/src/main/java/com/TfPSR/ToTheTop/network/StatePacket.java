@@ -22,7 +22,7 @@ public final class StatePacket {
     public static final byte RESULT_NONE = 0;
     public static final byte RESULT_WIN = 1;
 
-    public static final int HEADER_SIZE = 4;
+    public static final int HEADER_SIZE = 6;
     public static final int PLAYER_HEADER_SIZE = 2;
     public static final int PART_SIZE = 12;
     public static final int PLAYER_TRAILER_SIZE = 2;
@@ -55,6 +55,8 @@ public final class StatePacket {
             return null;
 
         byte matchState = buffer.get();
+        byte result = buffer.get();
+        byte environmentMask = buffer.get();
         int playerCount = buffer.get() & 0xFF;
         if (playerCount > 4)
             return null;
@@ -86,8 +88,6 @@ public final class StatePacket {
                     (flags & FLAG_UNCONSCIOUS) != 0);
         }
 
-        // Reserved fields of the current layout: no result and no environment
-        // event is produced yet, but the client already exposes them.
-        return new Snapshot(matchState, RESULT_NONE, (byte) 0, players);
+        return new Snapshot(matchState, result, environmentMask, players);
     }
 }

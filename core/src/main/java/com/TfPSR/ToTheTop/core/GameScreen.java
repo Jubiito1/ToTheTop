@@ -53,6 +53,7 @@ public class GameScreen extends ScreenAdapter {
     /** Colour and name label of every slot, rebuilt when the roster changes. */
     private final Color[] slotTints = new Color[MAX_PLAYERS];
     private final GlyphLayout[] slotLabels = new GlyphLayout[MAX_PLAYERS];
+    private final GlyphLayout victoryLabel = new GlyphLayout();
     private final Matrix4 labelProjection = new Matrix4();
     private final Vector3 labelPoint = new Vector3();
     private final BitmapFont nameFont;
@@ -186,9 +187,26 @@ public class GameScreen extends ScreenAdapter {
             nameFont.draw(batch, label, x - label.width / 2f, y);
         }
 
+        drawVictory(width, height);
+
         nameFont.setColor(Color.WHITE);
         batch.end();
         batch.setProjectionMatrix(camera.combined);
+    }
+
+    /**
+     * The server keeps sending the final pose once the match ends, so the result
+     * only has to be read from the newest snapshot.
+     */
+    private void drawVictory(int width, int height) {
+        StatePacket.Snapshot snapshot = currentSnapshot;
+        if (snapshot == null || snapshot.matchState() != StatePacket.MATCH_FINISHED
+                || snapshot.result() != StatePacket.RESULT_WIN)
+            return;
+
+        victoryLabel.setText(nameFont, "Victoria");
+        nameFont.setColor(Color.WHITE);
+        nameFont.draw(batch, victoryLabel, (width - victoryLabel.width) / 2f, height * 0.25f);
     }
 
     /** Rebuilds the colour and the name label of every slot when a roster arrives. */
