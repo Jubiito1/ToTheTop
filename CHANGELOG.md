@@ -5,6 +5,20 @@ The format is based on Keep a Changelog, and this project adheres
 to Semantic Versioning.
 
 ---
+
+## [Unreleased]
+
+### Added
+
+* Added an animated splash screen with a glowing logo and transition to the loading screen.
+* Added a loading screen with a percentage indicator, rounded progress bar, and background image.
+* Added Tiled map loading through `AssetManager`.
+
+### Fixed
+
+* Fixed disposal of menu stages, generated textures, player textures, and replaced screens.
+
+---
 ## [0.7.0] - 2026-10-08
 
 ### Added

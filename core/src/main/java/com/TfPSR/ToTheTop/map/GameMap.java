@@ -1,11 +1,12 @@
 package com.TfPSR.ToTheTop.map;
 
+import com.TfPSR.ToTheTop.asset.AssetService;
+import com.TfPSR.ToTheTop.asset.TiledMapAsset;
 import com.TfPSR.ToTheTop.core.Constants;
 import com.badlogic.gdx.maps.MapGroupLayer;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Vector2;
 
 public class GameMap {
@@ -14,10 +15,8 @@ public class GameMap {
     private final MapLayer playerLayer;
     private final MapLayer surfaceLayer;
 
-    public GameMap(String mapPath) {
-        TmxMapLoader loader = new TmxMapLoader();
-
-        map = loader.load(mapPath);
+    public GameMap(AssetService assetService) {
+        map = (assetService.get(TiledMapAsset.FIRST_TILED_MAP));
         final MapGroupLayer gameplayLayer = (MapGroupLayer) map.getLayers().get("Gameplay");
         playerLayer = gameplayLayer.getLayers().get("Player");
         surfaceLayer = gameplayLayer.getLayers().get("Surface");

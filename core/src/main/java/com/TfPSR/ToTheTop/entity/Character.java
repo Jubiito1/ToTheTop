@@ -98,6 +98,15 @@ public class Character {
 
     public Vector2 getPosition() {return position;}
     public void setRootPosition(Vector2 p) { this.position.set(p); }
+
+    public void dispose() {
+        spriteHead.getTexture().dispose();
+        spriteTorso.getTexture().dispose();
+        spriteLeftLeg.getTexture().dispose();
+        spriteRightLeg.getTexture().dispose();
+        leftArm.dispose();
+        rightArm.dispose();
+    }
 }
 
 

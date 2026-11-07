@@ -24,6 +24,7 @@ public class HowToPlayMenu {
     private final Skin skin;
     private final Table table;
     private final TextButton backButton;
+    private Texture backgroundTexture;
     private InputProcessor previousInputProcessor;
 
     public HowToPlayMenu(AssetService assetService){
@@ -121,7 +122,7 @@ public class HowToPlayMenu {
             pixmap.setColor(color);
             pixmap.drawLine(0, i, gradWidth - 1, i);
         }
-        Texture backgroundTexture = new Texture(pixmap);
+        backgroundTexture = new Texture(pixmap);
         backgroundTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         pixmap.dispose();
 
@@ -161,5 +162,10 @@ public class HowToPlayMenu {
 
     public Stage getStage() {
         return stage;
+    }
+
+    public void dispose(){
+        stage.dispose();
+        backgroundTexture.dispose();
     }
 }

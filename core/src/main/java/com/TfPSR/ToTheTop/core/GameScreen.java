@@ -65,7 +65,7 @@ public class GameScreen extends ScreenAdapter {
         this.pauseMenu = new PauseMenu(assetService, game, this, settingsMenu);
         this.network = network;
 
-        map = new GameMap("maps/map.tmx");
+        map = new GameMap(assetService);
         mapRenderer = new OrthogonalTiledMapRenderer(map.getTiledMap(), 1f / Constants.PIXELS_PER_METER);
 
 
@@ -189,5 +189,12 @@ public class GameScreen extends ScreenAdapter {
 
         pauseMenu.resize(width, height);
         settingsMenu.resize(width, height);
+    }
+
+    @Override
+    public void dispose(){
+        player.dispose();
+        pauseMenu.dispose();
+        mapRenderer.dispose();
     }
 }
