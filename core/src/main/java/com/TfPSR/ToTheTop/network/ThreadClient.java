@@ -8,8 +8,12 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
 
 public class ThreadClient extends Thread {
+
+
+
     public enum Status { SEARCHING, ACCEPTED, REJECTED, STARTED }
 
     private static final int PORT = 6767;
@@ -25,6 +29,10 @@ public class ThreadClient extends Thread {
     private volatile boolean wantReady = false; // estado pedido por la UI
     private volatile int slot = -1;         // slot que el server asigno en ACCEPT
     private volatile int session = 0;       // id de sesion que el server asigno en ACCEPT
+    private volatile String roomCode = "";  // codigo de 4 cifras anunciado por el server
+    private volatile int maxPlayers = 4;    // cupo de la sala (ANNOUNCE)
+    private volatile boolean matchRunning = false; // la sala ya esta en partida (ANNOUNCE)
+    private volatile int rejectReason = 0;  // motivo del ultimo REJECT
     private volatile StatePacket.Snapshot latestSnapshot;
 
     public ThreadClient() throws IOException {
@@ -32,6 +40,7 @@ public class ThreadClient extends Thread {
         try {
             conection = new DatagramSocket();
             conection.setSoTimeout(TIMEOUT_MS);
+            conection.setBroadcast(true);
         } catch (SocketException e) {
             e.printStackTrace();
             throw new IOException("No se pudo crear el socket del cliente", e);
@@ -49,6 +58,19 @@ public class ThreadClient extends Thread {
     public int getReadyCount() {
         return readyCount;
     }
+
+    public int getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    public int getRejectReason() {
+        return rejectReason;
+    }
+
+    public String getRoomCode() {
+        return roomCode;
+    }
+
 
 
     public StatePacket.Snapshot getSnapshot() {
@@ -68,8 +90,18 @@ public class ThreadClient extends Thread {
         conection.send(data);
     }
 
-    private void send(byte header) throws IOException {
-        byte[] buf = new byte[]{header, ProtocolVersion.CURRENT};
+    private void sendDiscover() throws IOException {
+        byte[] buf = new byte[]{NetworkHeaders.DISCOVER, ProtocolVersion.CURRENT};
+        DatagramPacket data = new DatagramPacket(buf, buf.length, ipServer, PORT);
+        conection.send(data);
+    }
+
+
+    private void sendConnect() throws IOException {
+        if (roomCode.length() != 4)
+            return;
+
+        byte[] buf = ConnectPacket.encode(roomCode, "");
         DatagramPacket data = new DatagramPacket(buf, buf.length, ipServer, PORT);
         conection.send(data);
     }
@@ -82,9 +114,17 @@ public class ThreadClient extends Thread {
         }
     }
 
-    private void trySend(byte header) {
+    private void trySendDiscover() {
         try {
-            send(header);
+            sendDiscover();
+        } catch (IOException ignored) {
+            // si no se puede enviar, el timeout del loop reintenta
+        }
+    }
+
+    private void trySendConnect() {
+        try {
+            sendConnect();
         } catch (IOException ignored) {
             // si no se puede enviar, el timeout del loop reintenta
         }
@@ -103,8 +143,7 @@ public class ThreadClient extends Thread {
 
     @Override
     public void run() {
-        // primer CONNECT: el loop solo lo repite si nadie contesta (timeout)
-        trySend(NetworkHeaders.CONNECT);
+        trySendDiscover();
 
         while (running) {
             try {
@@ -116,10 +155,12 @@ public class ThreadClient extends Thread {
                 if (status == Status.REJECTED)
                     return;
             } catch (SocketTimeoutException e) {
-                // el socket tiene que quedar abierto durante la partida para seguir
-                // mandando input; solo se reintenta CONNECT mientras no haya partida
-                if (running && (status == Status.SEARCHING || status == Status.ACCEPTED))
-                    trySend(NetworkHeaders.CONNECT);
+                if (!running || status == Status.STARTED)
+                    continue;
+                if (roomCode.length() == 4)
+                    trySendConnect();
+                else
+                    trySendDiscover();
             } catch (SocketException e) {
                 if (running)
                     e.printStackTrace();
@@ -140,11 +181,24 @@ public class ThreadClient extends Thread {
         int off = dp.getOffset();
 
         switch (data[off]) {
+            case NetworkHeaders.ANNOUNCE -> {
+                if (dp.getLength() >= off + 9 && data[off + 1] == ProtocolVersion.CURRENT) {
+                    ipServer = dp.getAddress();   // a partir de aca se habla con el server
+                    roomCode = new String(data, off + 2, 4, StandardCharsets.US_ASCII);
+                    players = data[off + 6] & 0xFF;
+                    matchRunning = data[off + 7] != 0;
+                    maxPlayers = data[off + 8] & 0xFF;
+
+                    if (status == Status.SEARCHING)
+                        trySendConnect();
+                }
+            }
             case NetworkHeaders.ACCEPT -> {
                 ipServer = dp.getAddress();   // ya no broadcast: se habla con el server
-                if (dp.getLength() >= off + 4 && data[off + 1] == ProtocolVersion.CURRENT) {
+                if (dp.getLength() >= off + 8 && data[off + 1] == ProtocolVersion.CURRENT) {
                     session = data[off + 2] & 0xFF;
                     slot = data[off + 3] & 0xFF;
+                    roomCode = new String(data, off + 4, 4, StandardCharsets.US_ASCII);
                 }
                 status = Status.ACCEPTED;
                 if (wantReady)
@@ -157,8 +211,12 @@ public class ThreadClient extends Thread {
                 }
             }
             case NetworkHeaders.STATE -> latestSnapshot =
-                    StatePacket.decode(data, off, dp.getLength()); //If the 'header' of the package is state, we decode it and save it into a lastSnapshot type
-            case NetworkHeaders.REJECT -> status = Status.REJECTED;
+                    StatePacket.decode(data, off, dp.getLength());
+            case NetworkHeaders.REJECT -> {
+                if (dp.getLength() >= off + 3)
+                    rejectReason = data[off + 2] & 0xFF;
+                status = Status.REJECTED;
+            }
             case NetworkHeaders.START -> {
                 status = Status.STARTED;
                 StartFlag.startFlag = true;   // la WaitingMenu la lee en el render thread
@@ -166,11 +224,6 @@ public class ThreadClient extends Thread {
         }
     }
 
-    /**
-     * Leaves the match: the event travels in the input packet, repeated a few
-     * times so a lost datagram does not keep the slot open, and then the socket
-     * is closed. The server also frees the slot through {@code DISCONNECT}.
-     */
     public void leave() {
         if (status == Status.STARTED) {
             for (int i = 0; i < 3; i++) {

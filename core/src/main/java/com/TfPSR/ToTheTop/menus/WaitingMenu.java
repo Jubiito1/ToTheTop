@@ -7,6 +7,7 @@ import com.TfPSR.ToTheTop.asset.AssetService;
 import com.TfPSR.ToTheTop.asset.MusicAsset;
 import com.TfPSR.ToTheTop.asset.TextureAsset;
 import com.TfPSR.ToTheTop.core.GameScreen;
+import com.TfPSR.ToTheTop.network.NetworkHeaders;
 import com.TfPSR.ToTheTop.network.ThreadClient;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
@@ -38,6 +39,7 @@ public class WaitingMenu extends ScreenAdapter {
     private final Batch batch;
     private final Stage stage;
     private final Label statusLabel;
+    private final Label roomLabel;
     private float time;
     private ThreadClient threadClient;
     private boolean ready = false;
@@ -66,6 +68,7 @@ public class WaitingMenu extends ScreenAdapter {
         Label title = new Label("SALA MULTIJUGADOR", titleStyle);
         title.setFontScale(2f);
         this.statusLabel = new Label("Buscando servidor", labelStyle);
+        this.roomLabel = new Label("Sala: ----", labelStyle);
 
         TextButton readyButton = new TextButton("LISTO", skin);
         readyButton.addListener(new ChangeListener() {
@@ -95,6 +98,8 @@ public class WaitingMenu extends ScreenAdapter {
         table.row();
         table.add(statusLabel).padTop(25);
         table.row();
+        table.add(roomLabel).padTop(12);
+        table.row();
         table.add(readyButton).width(220).height(55).padTop(30);
         table.row();
         table.add(cancelButton).width(220).height(55).padTop(15);
@@ -104,10 +109,22 @@ public class WaitingMenu extends ScreenAdapter {
     /** Texto del estado de la sala, segun lo que vaya respondiendo el server. */
     private String statusText(String dots) {
         return switch (threadClient.getStatus()) {
-            case REJECTED -> "No se pudo unir a la sala (llena o en curso)";
-            case ACCEPTED, STARTED -> "Conectado  |  " + threadClient.getPlayers() + "/4 jugadores  |  "
+            case REJECTED -> rejectText() + dots;
+            case ACCEPTED, STARTED -> "Conectado  |  " + threadClient.getPlayers() + "/"
+                    + threadClient.getMaxPlayers() + " jugadores  |  "
                     + threadClient.getReadyCount() + " listos (min. 2)" + dots;
             default -> "Buscando servidor" + dots;
+        };
+    }
+
+    /** Motivo del rechazo, para que el jugador sepa que corregir. */
+    private String rejectText() {
+        return switch (threadClient.getRejectReason()) {
+            case NetworkHeaders.REJECT_ROOM -> "Codigo de sala incorrecto";
+            case NetworkHeaders.REJECT_VERSION -> "Version del juego incompatible";
+            case NetworkHeaders.REJECT_FULL -> "Sala llena";
+            case NetworkHeaders.REJECT_STARTED -> "La partida ya empezo";
+            default -> "No se pudo unir a la sala";
         };
     }
 
@@ -135,6 +152,9 @@ public class WaitingMenu extends ScreenAdapter {
 
         time += delta;
         statusLabel.setText(statusText(DOTS[(int) (time / 0.4f) % DOTS.length]));
+
+        String code = threadClient.getRoomCode();
+        roomLabel.setText("Sala: " + (code.isEmpty() ? "----" : code));
 
         camera.update();
         batch.setProjectionMatrix(camera.combined);
