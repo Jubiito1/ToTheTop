@@ -155,4 +155,10 @@ public class WaitingMenu extends ScreenAdapter {
     public void hide() {
         music.stop();
     }
+
+    @Override
+    public void dispose(){
+        stage.dispose();
+        threadClient.disconnect();
+    }
 }

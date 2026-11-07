@@ -171,4 +171,11 @@ public class MainMenu extends ScreenAdapter {
     public void hide(){
         mainMenuMusic.stop();
     }
+
+    @Override
+    public void dispose(){
+        stage.dispose();
+        howToPlayMenu.dispose();
+        settingsMenu.dispose();
+    }
 }

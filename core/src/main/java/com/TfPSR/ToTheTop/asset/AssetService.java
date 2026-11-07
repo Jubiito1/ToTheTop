@@ -97,6 +97,7 @@ public class AssetService implements Disposable {
         Texture textureBackground = new Texture(pixmapBackground);
         TextureRegion textureRegionBackground = new TextureRegion(textureBackground);
         TextureRegionDrawable backgroundDrwabable = new TextureRegionDrawable(textureRegionBackground);
+        skin.add("whiteTexture", textureBackground, Texture.class);
         skin.add("white",  backgroundDrwabable, Drawable.class);
 
         pixmapBackground.dispose();
@@ -130,7 +131,9 @@ public class AssetService implements Disposable {
 
     @Override
     public void dispose() {
+        audioManager.stopMusic();
         this.assetManager.dispose();
+        skin.dispose();
     }
 
 

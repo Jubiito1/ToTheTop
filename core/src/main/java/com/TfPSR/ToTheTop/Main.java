@@ -46,7 +46,10 @@ public class Main extends Game { //We use Game, because it has better methods of
     }
 
     public void addScreen(Screen screen) {
-        screenCache.put(screen.getClass(), screen);
+        Screen previousScreen = screenCache.put(screen.getClass(), screen);
+        if (previousScreen != null && previousScreen != screen) {
+            previousScreen.dispose();
+        }
     }
 
     public void setScreen(Class<? extends Screen> screenClass) {
@@ -62,6 +65,8 @@ public class Main extends Game { //We use Game, because it has better methods of
         screenCache.values().forEach(Screen::dispose);
         screenCache.clear();
         this.batch.dispose();
+        assetService.dispose();
+
     }
 
     public Viewport getViewport() {

@@ -14,6 +14,10 @@ to Semantic Versioning.
 * Added a loading screen with a percentage indicator, rounded progress bar, and background image.
 * Added Tiled map loading through `AssetManager`.
 
+### Fixed
+
+* Fixed disposal of menu stages, generated textures, player textures, and replaced screens.
+
 ---
 ## [0.7.0] - 2026-10-08
 

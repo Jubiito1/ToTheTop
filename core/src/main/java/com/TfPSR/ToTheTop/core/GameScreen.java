@@ -133,4 +133,11 @@ public class GameScreen extends ScreenAdapter {
         pauseMenu.resize(width, height);
         settingsMenu.resize(width, height);
     }
+
+    @Override
+    public void dispose(){
+        player.dispose();
+        pauseMenu.dispose();
+        mapRenderer.dispose();
+    }
 }

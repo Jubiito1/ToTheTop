@@ -7,7 +7,6 @@ import com.badlogic.gdx.maps.MapGroupLayer;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Vector2;
 
 public class GameMap {
@@ -15,10 +14,8 @@ public class GameMap {
     private final TiledMap map;
     private final MapLayer playerLayer;
     private final MapLayer surfaceLayer;
-    private final AssetService assetService;
 
     public GameMap(AssetService assetService) {
-        this.assetService = assetService;
         map = (assetService.get(TiledMapAsset.FIRST_TILED_MAP));
         final MapGroupLayer gameplayLayer = (MapGroupLayer) map.getLayers().get("Gameplay");
         playerLayer = gameplayLayer.getLayers().get("Player");

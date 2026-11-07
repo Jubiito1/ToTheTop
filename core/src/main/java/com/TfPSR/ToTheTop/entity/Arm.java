@@ -59,5 +59,11 @@ public class Arm {
         spriteHand.draw(batch);
     }
 
+    public void dispose() {
+        spriteUpperArm.getTexture().dispose();
+        spriteForearm.getTexture().dispose();
+        spriteHand.getTexture().dispose();
+    }
+
 }
 

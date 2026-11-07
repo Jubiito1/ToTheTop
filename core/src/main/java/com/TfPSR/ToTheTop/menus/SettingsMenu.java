@@ -130,4 +130,8 @@ public class SettingsMenu {
     public void resize(int width, int height){
         stage.getViewport().update(width, height, true);
     }
+
+    public void dispose(){
+        stage.dispose();
+    }
 }

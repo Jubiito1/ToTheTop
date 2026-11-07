@@ -18,6 +18,7 @@ public class LoadMenu extends ScreenAdapter {
     private ShapeRenderer shapeRenderer;
     private final SettingsMenu settingsMenu;
     private final Texture backgroundImage;
+    private boolean settingsMenuTransferred = false;
 
     public LoadMenu(Main game, AssetService assetService) {
         this.game = game;
@@ -90,6 +91,7 @@ public class LoadMenu extends ScreenAdapter {
 
         if(finishedLoad){
             game.addScreen(new MainMenu(game, assetService, settingsMenu));
+            settingsMenuTransferred = true;
             game.setScreen(MainMenu.class);
         }
     }
@@ -97,6 +99,9 @@ public class LoadMenu extends ScreenAdapter {
     @Override
     public void dispose(){
         shapeRenderer.dispose();
+        if (!settingsMenuTransferred) {
+            settingsMenu.dispose();
+        }
     }
 
     private void drawRoundedBar(float x, float y, float width, float height) {
