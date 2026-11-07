@@ -10,18 +10,24 @@ import com.TfPSR.ToTheTop.menus.PauseMenu;
 import com.TfPSR.ToTheTop.network.InputPacket;
 import com.TfPSR.ToTheTop.network.PartState;
 import com.TfPSR.ToTheTop.network.PlayerState;
+import com.TfPSR.ToTheTop.network.Roster;
 import com.TfPSR.ToTheTop.network.StateInterpolator;
 import com.TfPSR.ToTheTop.network.StatePacket;
 import com.TfPSR.ToTheTop.network.ThreadClient;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class GameScreen extends ScreenAdapter {
@@ -32,6 +38,9 @@ public class GameScreen extends ScreenAdapter {
     private static final Vector2 CHARACTER_SIZE = new Vector2(0.6f, 1.80f);
     private static final float SNAPSHOT_INTERVAL = 1f / 60f;
 
+    /** Height above the head anchor where the roster name is drawn, in meters. */
+    private static final float NAME_OFFSET_Y = 0.3f;
+
     private final Main game;
     private final Viewport viewport;
     private final OrthographicCamera camera;
@@ -40,6 +49,14 @@ public class GameScreen extends ScreenAdapter {
     /** One character per slot, created from the first snapshot that mentions it. */
     private final Character[] players = new Character[MAX_PLAYERS];
     private final Vector2 spawn;
+
+    /** Colour and name label of every slot, rebuilt when the roster changes. */
+    private final Color[] slotTints = new Color[MAX_PLAYERS];
+    private final GlyphLayout[] slotLabels = new GlyphLayout[MAX_PLAYERS];
+    private final Matrix4 labelProjection = new Matrix4();
+    private final Vector3 labelPoint = new Vector3();
+    private final BitmapFont nameFont;
+    private Roster roster;
 
     private final GameMap map;
     private final OrthogonalTiledMapRenderer mapRenderer;
@@ -77,6 +94,12 @@ public class GameScreen extends ScreenAdapter {
         this.pauseMenu = new PauseMenu(assetService, game, this, settingsMenu);
         this.network = network;
 
+        this.nameFont = assetService.getSkin().getFont("buttonFont");
+        for (int slot = 0; slot < MAX_PLAYERS; slot++) {
+            slotTints[slot] = new Color(Color.WHITE);
+            slotLabels[slot] = new GlyphLayout();
+        }
+
         map = new GameMap("maps/map.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map.getTiledMap(), 1f / Constants.PIXELS_PER_METER);
 
@@ -112,12 +135,17 @@ public class GameScreen extends ScreenAdapter {
         mapRenderer.render();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        for (Character character : players) {
-            if (character != null)
-                character.draw(batch);
+        for (int slot = 0; slot < players.length; slot++) {
+            Character character = players[slot];
+            if (character == null)
+                continue;
+            character.setTint(slotTints[slot]);
+            character.draw(batch);
         }
 
         batch.end();
+
+        drawNames();
 
         if (paused) {
             pauseMenu.getStage().act(Gdx.graphics.getDeltaTime());
@@ -127,7 +155,65 @@ public class GameScreen extends ScreenAdapter {
         }
     }
 
+    /**
+     * Draws the name of every player above its head, in the colour of its slot.
+     * Runs in screen space, so the text keeps a readable size whatever the zoom.
+     */
+    private void drawNames() {
+        int width = Gdx.graphics.getWidth();
+        int height = Gdx.graphics.getHeight();
+
+        // Screen space with the origin at the top left, matching the y that
+        // comes out of the projection below.
+        labelProjection.setToOrtho(0, width, height, 0, 0, 1);
+        batch.setProjectionMatrix(labelProjection);
+        batch.begin();
+
+        for (int slot = 0; slot < players.length; slot++) {
+            Character character = players[slot];
+            GlyphLayout label = slotLabels[slot];
+            if (character == null || label.width <= 0f)
+                continue;
+
+            // The head is the anchor of the character; the name goes above it.
+            labelPoint.set(character.getPosition().x, character.getPosition().y + NAME_OFFSET_Y, 0f);
+            labelPoint.prj(camera.combined);
+
+            float x = (labelPoint.x + 1f) / 2f * width;
+            float y = (1f - labelPoint.y) / 2f * height;
+
+            nameFont.setColor(slotTints[slot]);
+            nameFont.draw(batch, label, x - label.width / 2f, y);
+        }
+
+        nameFont.setColor(Color.WHITE);
+        batch.end();
+        batch.setProjectionMatrix(camera.combined);
+    }
+
+    /** Rebuilds the colour and the name label of every slot when a roster arrives. */
+    private void refreshRoster() {
+        Roster current = network.getRoster();
+        if (current == roster)
+            return;
+        roster = current;
+
+        for (int slot = 0; slot < MAX_PLAYERS; slot++) {
+            slotTints[slot].set(Color.WHITE);
+            slotLabels[slot].setText(nameFont, "");
+        }
+
+        for (Roster.Entry entry : current.entries()) {
+            int slot = entry.slot();
+            if (slot < 0 || slot >= MAX_PLAYERS)
+                continue;
+            slotTints[slot].set(entry.color());
+            slotLabels[slot].setText(nameFont, entry.name());
+        }
+    }
+
     private void update(float delta) {
+        refreshRoster();
         updateSnapshot(delta);
         centerCameraOnPlayers();
         sendInput(delta);

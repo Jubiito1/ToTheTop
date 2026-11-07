@@ -1,6 +1,7 @@
 package com.TfPSR.ToTheTop.entity;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -92,6 +93,15 @@ public class Character {
         spriteTorso.draw(batch);
     }
 
+    /** Tints every part with the colour the roster assigned to this slot. */
+    public void setTint(Color color) {
+        spriteHead.setColor(color);
+        spriteTorso.setColor(color);
+        spriteLeftLeg.setColor(color);
+        spriteRightLeg.setColor(color);
+        leftArm.setTint(color);
+        rightArm.setTint(color);
+    }
 
     public Vector2 getPosition() {return position;}
 }

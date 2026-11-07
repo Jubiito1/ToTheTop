@@ -30,6 +30,7 @@ public class ThreadClient extends Thread {
     private volatile int maxPlayers = 4;    // cupo de la sala (ANNOUNCE)
     private volatile boolean matchRunning = false; // la sala ya esta en partida (ANNOUNCE)
     private volatile int rejectReason = 0;  // motivo del ultimo REJECT
+    private volatile Roster roster = Roster.empty(); // quien esta en la sala y de que color
     private volatile StatePacket.Snapshot latestSnapshot;
 
     public ThreadClient() throws IOException {
@@ -86,6 +87,11 @@ public class ThreadClient extends Thread {
     /** Reason of the last REJECT, or 0 when there was none. */
     public int getRejectReason() {
         return rejectReason;
+    }
+
+    /** Last roster announced by the server; empty before the first one. */
+    public Roster getRoster() {
+        return roster;
     }
 
     /**
@@ -233,9 +239,11 @@ public class ThreadClient extends Thread {
                     trySendSession(NetworkHeaders.READY);
             }
             case NetworkHeaders.ROSTER -> {
-                if (dp.getLength() >= off + 4 && data[off + 1] == ProtocolVersion.CURRENT) {
-                    players = data[off + 2] & 0xFF;
-                    readyCount = data[off + 3] & 0xFF;
+                Roster decoded = Roster.decode(data, off, dp.getLength());
+                if (decoded != null) {
+                    roster = decoded;
+                    players = decoded.playerCount();
+                    readyCount = decoded.readyCount();
                 }
             }
             case NetworkHeaders.STATE -> latestSnapshot =

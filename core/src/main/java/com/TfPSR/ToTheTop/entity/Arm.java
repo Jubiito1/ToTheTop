@@ -1,6 +1,7 @@
 package com.TfPSR.ToTheTop.entity;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -64,6 +65,13 @@ public class Arm {
         spriteUpperArm.draw(batch);
         spriteForearm.draw(batch);
         spriteHand.draw(batch);
+    }
+
+    /** Tints the three segments with the colour of its slot. */
+    public void setTint(Color color) {
+        spriteUpperArm.setColor(color);
+        spriteForearm.setColor(color);
+        spriteHand.setColor(color);
     }
 
 }
