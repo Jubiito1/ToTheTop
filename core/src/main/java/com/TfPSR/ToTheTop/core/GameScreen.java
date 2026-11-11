@@ -5,6 +5,7 @@ import com.TfPSR.ToTheTop.asset.AssetService;
 import com.TfPSR.ToTheTop.entity.Character;
 import com.TfPSR.ToTheTop.input.GameInputProcessor;
 import com.TfPSR.ToTheTop.map.GameMap;
+import com.TfPSR.ToTheTop.map.TerrainRenderer;
 import com.TfPSR.ToTheTop.menus.MainMenu;
 import com.TfPSR.ToTheTop.menus.SettingsMenu;
 import com.TfPSR.ToTheTop.menus.PauseMenu;
@@ -62,6 +63,7 @@ public class GameScreen extends ScreenAdapter {
 
     private final GameMap map;
     private final OrthogonalTiledMapRenderer mapRenderer;
+    private final TerrainRenderer terrainRenderer;
 
     private final AssetService assetService;
     private final InputMultiplexer inputMultiplexer;
@@ -104,6 +106,7 @@ public class GameScreen extends ScreenAdapter {
 
         map = new GameMap("maps/map.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map.getTiledMap(), 1f / Constants.PIXELS_PER_METER);
+        terrainRenderer = new TerrainRenderer(map.getSurfaceObjects());
 
         spawn = map.getPlayerSpawn();
 
@@ -128,7 +131,7 @@ public class GameScreen extends ScreenAdapter {
                 return;
             }
 
-            Gdx.gl.glClearColor(0, 0, 0, 1);
+            Gdx.gl.glClearColor(0.04f, 0.05f, 0.08f, 1f);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
             update(delta);
@@ -140,6 +143,8 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void draw() {
+        terrainRenderer.render(camera.combined);
+
         mapRenderer.setView(camera);
         mapRenderer.render();
         batch.setProjectionMatrix(camera.combined);
@@ -434,5 +439,11 @@ public class GameScreen extends ScreenAdapter {
 
         pauseMenu.resize(width, height);
         settingsMenu.resize(width, height);
+    }
+
+    @Override
+    public void dispose() {
+        terrainRenderer.dispose();
+        mapRenderer.dispose();
     }
 }
