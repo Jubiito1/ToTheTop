@@ -30,7 +30,16 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class GameScreen extends ScreenAdapter {
     private static final float INPUT_INTERVAL = 1f / 60f;   // ritmo fijo de simulacion del server
@@ -55,7 +64,6 @@ public class GameScreen extends ScreenAdapter {
     /** Colour and name label of every slot, rebuilt when the roster changes. */
     private final Color[] slotTints = new Color[MAX_PLAYERS];
     private final GlyphLayout[] slotLabels = new GlyphLayout[MAX_PLAYERS];
-    private final GlyphLayout victoryLabel = new GlyphLayout();
     private final Matrix4 labelProjection = new Matrix4();
     private final Vector3 labelPoint = new Vector3();
     private final BitmapFont nameFont;
@@ -85,6 +93,8 @@ public class GameScreen extends ScreenAdapter {
     private boolean paused = false;
     private final SettingsMenu settingsMenu;
     private final PauseMenu pauseMenu;
+    private final Stage matchEndStage;
+    private boolean matchEnded;
 
     public GameScreen(Main game, AssetService assetService, SettingsMenu settingsMenu,
                       ThreadClient network) {
@@ -97,6 +107,7 @@ public class GameScreen extends ScreenAdapter {
         this.settingsMenu = settingsMenu;
         this.pauseMenu = new PauseMenu(assetService, game, this, settingsMenu);
         this.network = network;
+        this.matchEndStage = createMatchEndStage();
 
         this.nameFont = assetService.getSkin().getFont("buttonFont");
         for (int slot = 0; slot < MAX_PLAYERS; slot++) {
@@ -120,6 +131,41 @@ public class GameScreen extends ScreenAdapter {
         Gdx.input.setInputProcessor(inputMultiplexer);
 
         Gdx.input.setCursorCatched(true);
+    }
+
+    /** Builds the modal shown when the authoritative server declares a winner. */
+    private Stage createMatchEndStage() {
+        Skin skin = assetService.getSkin();
+        Stage stage = new Stage(new ScreenViewport());
+
+        Image overlay = new Image(skin.getDrawable("white"));
+        overlay.setColor(0f, 0f, 0f, 0.7f);
+        overlay.setFillParent(true);
+        stage.addActor(overlay);
+
+        Label.LabelStyle baseStyle = skin.get("defaultLabelStyle", Label.LabelStyle.class);
+        Label.LabelStyle titleStyle = new Label.LabelStyle(baseStyle.font, Color.WHITE);
+        Label title = new Label("¡Victoria!", titleStyle);
+        title.setFontScale(2f);
+
+        TextButton menuButton = new TextButton("Volver al menú", skin);
+        menuButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                network.disconnect();
+                Gdx.input.setCursorCatched(false);
+                game.setScreen(MainMenu.class);
+            }
+        });
+
+        Table table = new Table();
+        table.setFillParent(true);
+        table.add(title).padBottom(32);
+        table.row();
+        table.add(menuButton).width(280).height(70);
+        stage.addActor(table);
+        stage.getRoot().setVisible(false);
+        return stage;
     }
 
     @Override
@@ -160,6 +206,12 @@ public class GameScreen extends ScreenAdapter {
         batch.end();
 
         drawNames();
+
+        if (matchEnded) {
+            matchEndStage.act(Gdx.graphics.getDeltaTime());
+            matchEndStage.draw();
+            return;
+        }
 
         if (paused) {
             pauseMenu.getStage().act(Gdx.graphics.getDeltaTime());
@@ -202,26 +254,9 @@ public class GameScreen extends ScreenAdapter {
             nameFont.draw(batch, label, x - label.width / 2f, y + label.height);
         }
 
-        drawVictory(width, height);
-
         nameFont.setColor(Color.WHITE);
         batch.end();
         batch.setProjectionMatrix(camera.combined);
-    }
-
-    /**
-     * The server keeps sending the final pose once the match ends, so the result
-     * only has to be read from the newest snapshot.
-     */
-    private void drawVictory(int width, int height) {
-        StatePacket.Snapshot snapshot = currentSnapshot;
-        if (snapshot == null || snapshot.matchState() != StatePacket.MATCH_FINISHED
-                || snapshot.result() != StatePacket.RESULT_WIN)
-            return;
-
-        victoryLabel.setText(nameFont, "Victoria");
-        nameFont.setColor(Color.WHITE);
-        nameFont.draw(batch, victoryLabel, (width - victoryLabel.width) / 2f, height * 0.25f);
     }
 
     /** Rebuilds the colour and the name label of every slot when a roster arrives. */
@@ -277,6 +312,11 @@ public class GameScreen extends ScreenAdapter {
 
         if (currentSnapshot == null)
             return;
+
+        if (currentSnapshot.matchState() == StatePacket.MATCH_FINISHED
+                && currentSnapshot.result() == StatePacket.RESULT_WIN) {
+            showMatchEnd();
+        }
 
         snapshotAge += delta;
         float alpha = Math.min(1f, snapshotAge / SNAPSHOT_INTERVAL);
@@ -348,6 +388,9 @@ public class GameScreen extends ScreenAdapter {
      * server reciba un flujo estable aunque el render vaya a otra tasa.
      */
     private void sendInput(float delta) {
+        if (matchEnded)
+            return;
+
         if (!paused)
             updatePointer();
 
@@ -440,6 +483,7 @@ public class GameScreen extends ScreenAdapter {
         viewport.update(width, height);
 
         pauseMenu.resize(width, height);
+        matchEndStage.getViewport().update(width, height, true);
         settingsMenu.resize(width, height);
     }
 
@@ -452,5 +496,18 @@ public class GameScreen extends ScreenAdapter {
                 character.dispose();
         }
         pauseMenu.dispose();
+        matchEndStage.dispose();
+    }
+
+    /** Shows the end screen exactly once and gives its button exclusive input. */
+    private void showMatchEnd() {
+        if (matchEnded)
+            return;
+
+        matchEnded = true;
+        inputProcessor.resetMouseButtons();
+        Gdx.input.setCursorCatched(false);
+        matchEndStage.getRoot().setVisible(true);
+        Gdx.input.setInputProcessor(matchEndStage);
     }
 }
