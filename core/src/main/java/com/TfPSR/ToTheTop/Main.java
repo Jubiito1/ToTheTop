@@ -45,7 +45,9 @@ public class Main extends Game { //We use Game, because it has better methods of
     }
 
     public void addScreen(Screen screen) {
-        screenCache.put(screen.getClass(), screen);
+        Screen previous = screenCache.put(screen.getClass(), screen);
+        if (previous != null && previous != screen)
+            previous.dispose();
     }
 
     public void setScreen(Class<? extends Screen> screenClass) {
