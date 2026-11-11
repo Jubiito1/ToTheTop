@@ -177,9 +177,9 @@ public class GameScreen extends ScreenAdapter {
         int width = Gdx.graphics.getWidth();
         int height = Gdx.graphics.getHeight();
 
-        // Screen space with the origin at the top left, matching the y that
-        // comes out of the projection below.
-        labelProjection.setToOrtho(0, width, height, 0, 0, 1);
+        // Screen space with the origin at the bottom left, the same orientation
+        // BitmapFont expects; a y-down projection would draw the text mirrored.
+        labelProjection.setToOrtho(0, width, 0, height, 0, 1);
         batch.setProjectionMatrix(labelProjection);
         batch.begin();
 
@@ -194,10 +194,12 @@ public class GameScreen extends ScreenAdapter {
             labelPoint.prj(camera.combined);
 
             float x = (labelPoint.x + 1f) / 2f * width;
-            float y = (1f - labelPoint.y) / 2f * height;
+            float y = (labelPoint.y + 1f) / 2f * height;
 
             nameFont.setColor(slotTints[slot]);
-            nameFont.draw(batch, label, x - label.width / 2f, y);
+            // BitmapFont draws downwards from the y it is given, so start the
+            // text one line above the anchor to leave the head clear.
+            nameFont.draw(batch, label, x - label.width / 2f, y + label.height);
         }
 
         drawVictory(width, height);
