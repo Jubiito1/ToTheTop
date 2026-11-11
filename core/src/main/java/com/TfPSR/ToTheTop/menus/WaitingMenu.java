@@ -46,6 +46,9 @@ public class WaitingMenu extends ScreenAdapter {
     private ThreadClient threadClient;
     private boolean ready = false;
 
+    /** True once the lobby hands its connection to the match screen. */
+    private boolean handedOff = false;
+
     public WaitingMenu(Main game, AssetService assetService, SettingsMenu settingsMenu) throws IOException {
         this.game = game;
         this.assetService = assetService;
@@ -155,6 +158,7 @@ public class WaitingMenu extends ScreenAdapter {
     public void render(float delta) {
         // la flag la escribe el ThreadClient, esto corre en el render thread
         if (StartFlag.startFlag) {
+            handedOff = true;
             game.addScreen(new GameScreen(game, assetService, settingsMenu, threadClient));
             game.setScreen(GameScreen.class);
             return;
@@ -200,5 +204,13 @@ public class WaitingMenu extends ScreenAdapter {
     @Override
     public void hide() {
         music.stop();
+    }
+
+    @Override
+    public void dispose() {
+        // The connection belongs to the match screen once the match starts.
+        if (!handedOff)
+            threadClient.disconnect();
+        stage.dispose();
     }
 }

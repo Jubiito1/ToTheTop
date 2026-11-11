@@ -445,5 +445,10 @@ public class GameScreen extends ScreenAdapter {
     public void dispose() {
         terrainRenderer.dispose();
         mapRenderer.dispose();
+        for (Character character : players) {
+            if (character != null)
+                character.dispose();
+        }
+        pauseMenu.dispose();
     }
 }

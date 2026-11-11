@@ -110,4 +110,9 @@ public class PauseMenu {
     public void resize(int width, int height){
         stage.getViewport().update(width, height, true);
     }
+
+    /** Frees the stage of this menu; its textures are owned by the assets. */
+    public void dispose(){
+        stage.dispose();
+    }
 }
