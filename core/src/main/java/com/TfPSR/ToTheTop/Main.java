@@ -34,8 +34,8 @@ public class Main extends Game { //We use Game, because it has better methods of
         this.viewport = new FitViewport(MAX_WIDTH, MAX_HEIGHT, camera);
         this.assetService = new AssetService(new InternalFileHandleResolver());
 
-        addScreen(new LoadMenu(this, assetService));
-        setScreen(LoadMenu.class);
+        addScreen(new SplashMenu(this, assetService));
+        setScreen(SplashMenu.class);
     }
 
     @Override
@@ -46,9 +46,6 @@ public class Main extends Game { //We use Game, because it has better methods of
     }
 
     public void addScreen(Screen screen) {
-        Screen previous = screenCache.put(screen.getClass(), screen);
-        if (previous != null && previous != screen)
-            previous.dispose();
         Screen previousScreen = screenCache.put(screen.getClass(), screen);
         if (previousScreen != null && previousScreen != screen) {
             previousScreen.dispose();

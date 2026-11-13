@@ -105,7 +105,7 @@ public class GameScreen extends ScreenAdapter {
             slotLabels[slot] = new GlyphLayout();
         }
 
-        map = new GameMap("maps/map.tmx");
+        map = new GameMap(assetService);
         mapRenderer = new OrthogonalTiledMapRenderer(map.getTiledMap(), 1f / Constants.PIXELS_PER_METER);
         terrainRenderer = new TerrainRenderer(map.getSurfaceObjects());
 
