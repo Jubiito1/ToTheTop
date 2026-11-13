@@ -12,18 +12,9 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ShortArray;
 
-/**
- * Draws the climbing surfaces of the map.
- *
- * <p>The map only stores the collision polygons of the rocks, without tile
- * layers, so the renderer used by Tiled draws nothing and the players would
- * climb invisible terrain. This class fills those same polygons, in the same
- * meter coordinates the server simulates, so what is drawn always matches what
- * can be grabbed.
- */
+//Here we draw the surface, although map controlls the collisions, we draw the poligons here
 public class TerrainRenderer implements Disposable {
 
-    /** Alternating rock shades; close enough to read as one surface. */
     private static final Color[] ROCK_COLORS = {
             new Color(0.26f, 0.28f, 0.32f, 1f),
             new Color(0.30f, 0.32f, 0.36f, 1f),
@@ -68,7 +59,6 @@ public class TerrainRenderer implements Disposable {
         }
     }
 
-    /** Draws the filled rock faces and then their outlines. */
     public void render(Matrix4 projection) {
         shapes.setProjectionMatrix(projection);
 

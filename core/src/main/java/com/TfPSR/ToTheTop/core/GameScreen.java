@@ -9,6 +9,7 @@ import com.TfPSR.ToTheTop.map.TerrainRenderer;
 import com.TfPSR.ToTheTop.menus.MainMenu;
 import com.TfPSR.ToTheTop.menus.SettingsMenu;
 import com.TfPSR.ToTheTop.menus.PauseMenu;
+import com.TfPSR.ToTheTop.menus.VictoryScreen;
 import com.TfPSR.ToTheTop.network.InputPacket;
 import com.TfPSR.ToTheTop.network.PartState;
 import com.TfPSR.ToTheTop.network.PlayerState;
@@ -55,7 +56,6 @@ public class GameScreen extends ScreenAdapter {
     /** Colour and name label of every slot, rebuilt when the roster changes. */
     private final Color[] slotTints = new Color[MAX_PLAYERS];
     private final GlyphLayout[] slotLabels = new GlyphLayout[MAX_PLAYERS];
-    private final GlyphLayout victoryLabel = new GlyphLayout();
     private final Matrix4 labelProjection = new Matrix4();
     private final Vector3 labelPoint = new Vector3();
     private final BitmapFont nameFont;
@@ -85,6 +85,7 @@ public class GameScreen extends ScreenAdapter {
     private boolean paused = false;
     private final SettingsMenu settingsMenu;
     private final PauseMenu pauseMenu;
+    private final VictoryScreen victoryScreen;
 
     public GameScreen(Main game, AssetService assetService, SettingsMenu settingsMenu,
                       ThreadClient network) {
@@ -115,6 +116,7 @@ public class GameScreen extends ScreenAdapter {
         pointer.set(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f);
 
         inputProcessor = new GameInputProcessor(this);
+        victoryScreen = new VictoryScreen(assetService, game, network, inputProcessor);
         inputMultiplexer.addProcessor(pauseMenu.getStage());
         inputMultiplexer.addProcessor(inputProcessor);
         Gdx.input.setInputProcessor(inputMultiplexer);
@@ -161,6 +163,12 @@ public class GameScreen extends ScreenAdapter {
 
         drawNames();
 
+        if (victoryScreen.isVisible()) {
+            victoryScreen.act(Gdx.graphics.getDeltaTime());
+            victoryScreen.draw();
+            return;
+        }
+
         if (paused) {
             pauseMenu.getStage().act(Gdx.graphics.getDeltaTime());
             pauseMenu.getStage().draw();
@@ -202,26 +210,9 @@ public class GameScreen extends ScreenAdapter {
             nameFont.draw(batch, label, x - label.width / 2f, y + label.height);
         }
 
-        drawVictory(width, height);
-
         nameFont.setColor(Color.WHITE);
         batch.end();
         batch.setProjectionMatrix(camera.combined);
-    }
-
-    /**
-     * The server keeps sending the final pose once the match ends, so the result
-     * only has to be read from the newest snapshot.
-     */
-    private void drawVictory(int width, int height) {
-        StatePacket.Snapshot snapshot = currentSnapshot;
-        if (snapshot == null || snapshot.matchState() != StatePacket.MATCH_FINISHED
-                || snapshot.result() != StatePacket.RESULT_WIN)
-            return;
-
-        victoryLabel.setText(nameFont, "Victoria");
-        nameFont.setColor(Color.WHITE);
-        nameFont.draw(batch, victoryLabel, (width - victoryLabel.width) / 2f, height * 0.25f);
     }
 
     /** Rebuilds the colour and the name label of every slot when a roster arrives. */
@@ -277,6 +268,11 @@ public class GameScreen extends ScreenAdapter {
 
         if (currentSnapshot == null)
             return;
+
+        if (currentSnapshot.matchState() == StatePacket.MATCH_FINISHED
+                && currentSnapshot.result() == StatePacket.RESULT_WIN) {
+            victoryScreen.show();
+        }
 
         snapshotAge += delta;
         float alpha = Math.min(1f, snapshotAge / SNAPSHOT_INTERVAL);
@@ -348,6 +344,9 @@ public class GameScreen extends ScreenAdapter {
      * server reciba un flujo estable aunque el render vaya a otra tasa.
      */
     private void sendInput(float delta) {
+        if (victoryScreen.isVisible())
+            return;
+
         if (!paused)
             updatePointer();
 
@@ -440,6 +439,7 @@ public class GameScreen extends ScreenAdapter {
         viewport.update(width, height);
 
         pauseMenu.resize(width, height);
+        victoryScreen.resize(width, height);
         settingsMenu.resize(width, height);
     }
 
@@ -452,5 +452,6 @@ public class GameScreen extends ScreenAdapter {
                 character.dispose();
         }
         pauseMenu.dispose();
+        victoryScreen.dispose();
     }
 }
