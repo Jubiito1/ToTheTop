@@ -1,6 +1,7 @@
 package com.TfPSR.ToTheTop.entity;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -60,21 +61,26 @@ public class Character {
         return sprite;
     }
 
-    public void applyArmState(boolean isLeft, Vector2 upperPos, float upperAngle, Vector2 forePos, float foreAngle, Vector2 handPos, float handAngle) {
-        Arm arm = isLeft ? leftArm : rightArm;
-        arm.applyState(upperPos, upperAngle, forePos, foreAngle, handPos, handAngle);
-    }
-
-
     public void applyPartState(int partIndex, Vector2 pos, float angleDeg) {
         switch (partIndex) {
-            //case HEAD:      applySegment(spriteHead, pos, angleDeg); break;
-            //case TORSO:     applySegment(spriteTorso, pos, angleDeg); break;
-            //case LEFT_LEG:  applySegment(spriteLeftLeg, pos, angleDeg); break;
-            //case RIGHT_LEG: applySegment(spriteRightLeg, pos, angleDeg); break;
-            //case LEFT_ARM:  leftArm.applyState(...);  break;   // sub-array de segmentos
-            //case RIGHT_ARM: rightArm.applyState(...); break;
+            case 0 -> {
+                applySegment(spriteHead, pos, angleDeg);
+                position.set(pos);          // the head is the camera anchor
+            }
+            case 1 -> applySegment(spriteTorso, pos, angleDeg);
+            case 2, 3, 4 -> leftArm.applySegment(partIndex - 2, pos, angleDeg);
+            case 5, 6, 7 -> rightArm.applySegment(partIndex - 5, pos, angleDeg);
+            case 8 -> applySegment(spriteLeftLeg, pos, angleDeg);
+            case 9 -> applySegment(spriteRightLeg, pos, angleDeg);
+            default -> {
+                // Unknown part: ignore it instead of breaking the frame.
+            }
         }
+    }
+
+    private void applySegment(Sprite sprite, Vector2 pos, float angleDeg) {
+        sprite.setPosition(pos.x - sprite.getWidth() / 2f, pos.y - sprite.getHeight() / 2f);
+        sprite.setRotation(angleDeg);
     }
 
     public void draw(Batch batch) {
@@ -87,18 +93,7 @@ public class Character {
         spriteTorso.draw(batch);
     }
 
-
-    public void update(Vector2 mouseVelocity, boolean leftMousePressed, boolean rightMousePressed) {
-        if (leftMousePressed) {
-        }
-
-        if (rightMousePressed) {
-        }
-    }
-
-    public Vector2 getPosition() {return position;}
-    public void setRootPosition(Vector2 p) { this.position.set(p); }
-
+    /** Frees the textures of every part; the character is gone from the match. */
     public void dispose() {
         spriteHead.getTexture().dispose();
         spriteTorso.getTexture().dispose();
@@ -107,6 +102,18 @@ public class Character {
         leftArm.dispose();
         rightArm.dispose();
     }
+
+    /** Tints every part with the colour the roster assigned to this slot. */
+    public void setTint(Color color) {
+        spriteHead.setColor(color);
+        spriteTorso.setColor(color);
+        spriteLeftLeg.setColor(color);
+        spriteRightLeg.setColor(color);
+        leftArm.setTint(color);
+        rightArm.setTint(color);
+    }
+
+    public Vector2 getPosition() {return position;}
 }
 
 
