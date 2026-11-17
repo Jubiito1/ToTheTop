@@ -83,6 +83,12 @@ public class Character {
         sprite.setRotation(angleDeg);
     }
 
+    /** Shows which hands hold a rock, from the grip mask of the state packet. */
+    public void setGripping(boolean left, boolean right) {
+        leftArm.setGripping(left);
+        rightArm.setGripping(right);
+    }
+
     public void draw(Batch batch) {
 
         leftArm.draw(batch);

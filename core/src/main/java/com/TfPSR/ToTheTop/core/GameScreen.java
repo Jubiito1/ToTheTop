@@ -304,6 +304,8 @@ public class GameScreen extends ScreenAdapter {
                 PartState part = state.parts()[i];
                 character.applyPartState(i, new Vector2(part.x(), part.y()), part.angleDegrees());
             }
+
+            character.setGripping(state.leftGripped(), state.rightGripped());
         }
     }
 
