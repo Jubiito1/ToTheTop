@@ -22,8 +22,8 @@
    <object id="16" name="Rock5" type="Rock" x="920" y="536">
     <polygon points="0,0 -64,-40 -64,-224 -120,-424 -264,-472 -192,-504 -8,-432"/>
    </object>
-   <object id="17" name="Rock6" type="Rock" x="776" y="540">
-    <polygon points="0,0 -2,-64 4,-96 12,-100 19,-94 19,0"/>
+   <object id="17" name="Rock6" type="Rock" x="730" y="536">
+    <polygon points="0,0 12,-36 6,-66 22,-90 42,-100 58,-94 65,-76 65,0"/>
    </object>
   </objectgroup>
  </group>
