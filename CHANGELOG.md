@@ -10,6 +10,14 @@ to Semantic Versioning.
 
 ---
 
+## [0.8.1] - 2026-11-17
+
+### Fixed
+
+* Fixed the starting rock (`Rock6`) sinking into the platform, which drew its outline inside the platform rock. It is now a wider outcrop resting on the platform, with the same climbable face.
+
+---
+
 ## [0.8.0] - 2026-11-16
 
 ### Added
