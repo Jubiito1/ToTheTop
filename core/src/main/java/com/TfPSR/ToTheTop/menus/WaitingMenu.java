@@ -1,4 +1,4 @@
-// menus/WaitingScreen.java
+// menus/WaitingMenu.java
 package com.TfPSR.ToTheTop.menus;
 
 import com.TfPSR.ToTheTop.Main;
@@ -60,7 +60,7 @@ public class WaitingMenu extends ScreenAdapter {
         this.music = assetService.get(MusicAsset.MAIN_MENU_MUSIC);
         this.stage = new Stage(new ScreenViewport());
 
-        // si se volvio de una partida anterior, la flag tiene que arrancar en false
+        // when coming back from a previous match, the flag must start as false
         StartFlag.startFlag = false;
 
         this.threadClient = new ThreadClient();
@@ -70,24 +70,24 @@ public class WaitingMenu extends ScreenAdapter {
         Label.LabelStyle labelStyle = skin.get("defaultLabelStyle", Label.LabelStyle.class);
         Label.LabelStyle titleStyle = new Label.LabelStyle(labelStyle.font, new Color(1f, 0.78f, 0.38f, 1f));
 
-        Label title = new Label("SALA MULTIJUGADOR", titleStyle);
+        Label title = new Label("MULTIPLAYER ROOM", titleStyle);
         title.setFontScale(2f);
-        this.statusLabel = new Label("Buscando servidor", labelStyle);
-        this.roomLabel = new Label("Sala: ----", labelStyle);
+        this.statusLabel = new Label("Searching for server", labelStyle);
+        this.roomLabel = new Label("Room: ----", labelStyle);
 
-        TextButton readyButton = new TextButton("LISTO", skin);
+        TextButton readyButton = new TextButton("READY", skin);
         readyButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 if (threadClient.getStatus() == ThreadClient.Status.REJECTED)
-                    return; // no se pudo entrar a la sala, no tiene sentido marcar listo
+                    return; // could not join the room, marking ready makes no sense
                 ready = !ready;
                 threadClient.setReady(ready);
-                readyButton.setText(ready ? "LISTO (OK)" : "LISTO");
+                readyButton.setText(ready ? "READY (OK)" : "READY");
             }
         });
 
-        TextButton cancelButton = new TextButton("Cancelar", skin);
+        TextButton cancelButton = new TextButton("Cancel", skin);
         cancelButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -96,8 +96,8 @@ public class WaitingMenu extends ScreenAdapter {
             }
         });
 
-        // El anfitrion es el unico que puede arrancar la partida.
-        this.startButton = new TextButton("EMPEZAR PARTIDA", skin);
+        // The host is the only one who can start the match.
+        this.startButton = new TextButton("START MATCH", skin);
         startButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -122,25 +122,25 @@ public class WaitingMenu extends ScreenAdapter {
         stage.addActor(table);
     }
 
-    /** Texto del estado de la sala, segun lo que vaya respondiendo el server. */
+    /** Status text of the room, following what the server answers. */
     private String statusText(String dots) {
         return switch (threadClient.getStatus()) {
             case REJECTED -> rejectText() + dots;
-            case ACCEPTED, STARTED -> "Conectado  |  " + threadClient.getPlayers() + "/"
-                    + threadClient.getMaxPlayers() + " jugadores  |  "
-                    + threadClient.getReadyCount() + " listos (min. 2)" + dots;
-            default -> "Buscando servidor" + dots;
+            case ACCEPTED, STARTED -> "Connected  |  " + threadClient.getPlayers() + "/"
+                    + threadClient.getMaxPlayers() + " players  |  "
+                    + threadClient.getReadyCount() + " ready (min. 2)" + dots;
+            default -> "Searching for server" + dots;
         };
     }
 
-    /** Motivo del rechazo, para que el jugador sepa que corregir. */
+    /** Reason of the rejection, so the player knows what to fix. */
     private String rejectText() {
         return switch (threadClient.getRejectReason()) {
-            case NetworkHeaders.REJECT_ROOM -> "Codigo de sala incorrecto";
-            case NetworkHeaders.REJECT_VERSION -> "Version del juego incompatible";
-            case NetworkHeaders.REJECT_FULL -> "Sala llena";
-            case NetworkHeaders.REJECT_STARTED -> "La partida ya empezo";
-            default -> "No se pudo unir a la sala";
+            case NetworkHeaders.REJECT_ROOM -> "Wrong room code";
+            case NetworkHeaders.REJECT_VERSION -> "Incompatible game version";
+            case NetworkHeaders.REJECT_FULL -> "Room is full";
+            case NetworkHeaders.REJECT_STARTED -> "The match already started";
+            default -> "Could not join the room";
         };
     }
 
@@ -156,7 +156,7 @@ public class WaitingMenu extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
-        // la flag la escribe el ThreadClient, esto corre en el render thread
+        // the ThreadClient writes the flag, this runs on the render thread
         if (StartFlag.startFlag) {
             handedOff = true;
             game.addScreen(new GameScreen(game, assetService, settingsMenu, threadClient));
@@ -165,7 +165,7 @@ public class WaitingMenu extends ScreenAdapter {
         }
 
         if (threadClient.isConnectionLost()) {
-            // el server dejo de responder: no hay sala a la que volver
+            // the server stopped answering: there is no room to go back to
             threadClient.disconnect();
             game.setScreen(MainMenu.class);
             return;
@@ -178,9 +178,9 @@ public class WaitingMenu extends ScreenAdapter {
         statusLabel.setText(statusText(DOTS[(int) (time / 0.4f) % DOTS.length]));
 
         String code = threadClient.getRoomCode();
-        roomLabel.setText("Sala: " + (code.isEmpty() ? "----" : code));
+        roomLabel.setText("Room: " + (code.isEmpty() ? "----" : code));
 
-        // El boton solo existe para el anfitrion, con la sala unida y dos listos.
+        // The button only exists for the host, once joined and with two ready.
         boolean canStart = threadClient.isHost()
                 && threadClient.getStatus() == ThreadClient.Status.ACCEPTED
                 && threadClient.getReadyCount() >= 2;

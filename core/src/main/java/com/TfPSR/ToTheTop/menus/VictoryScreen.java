@@ -50,10 +50,10 @@ public class VictoryScreen {
 
         Label.LabelStyle baseStyle = skin.get("defaultLabelStyle", Label.LabelStyle.class);
         Label.LabelStyle titleStyle = new Label.LabelStyle(baseStyle.font, Color.WHITE);
-        Label title = new Label("¡Victoria!", titleStyle);
+        Label title = new Label("Victory!", titleStyle);
         title.setFontScale(2f);
 
-        TextButton menuButton = new TextButton("Volver al menú", skin);
+        TextButton menuButton = new TextButton("Back to menu", skin);
         menuButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {

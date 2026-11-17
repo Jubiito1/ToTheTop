@@ -40,6 +40,11 @@ public class Main extends Game { //We use Game, because it has better methods of
 
     @Override
     public void resize(int width, int height) {
+        // A minimized window reports a size of zero; resizing every viewport
+        // to nothing would leave them empty until the next real resize.
+        if (width <= 0 || height <= 0)
+            return;
+
         super.resize(width, height);
         viewport.update(width, height, true);
 

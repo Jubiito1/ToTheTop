@@ -32,16 +32,16 @@ public class ThreadClient extends Thread {
     private volatile boolean running = true;
 
     private volatile Status status = Status.SEARCHING;
-    private volatile int players = 0;      // ultima cantidad de conectados (ROSTER)
-    private volatile int readyCount = 0;    // ultima cantidad de listos (ROSTER)
-    private volatile boolean wantReady = false; // estado pedido por la UI
-    private volatile int slot = -1;         // slot que el server asigno en ACCEPT
-    private volatile int session = 0;       // id de sesion que el server asigno en ACCEPT
-    private volatile String roomCode = "";  // codigo de 4 cifras anunciado por el server
-    private volatile int maxPlayers = 4;    // cupo de la sala (ANNOUNCE)
-    private volatile boolean matchRunning = false; // la sala ya esta en partida (ANNOUNCE)
-    private volatile int rejectReason = 0;  // motivo del ultimo REJECT
-    private volatile Roster roster = Roster.empty(); // quien esta en la sala y de que color
+    private volatile int players = 0;      // last count of connected players (ROSTER)
+    private volatile int readyCount = 0;    // last count of ready players (ROSTER)
+    private volatile boolean wantReady = false; // state requested by the UI
+    private volatile int slot = -1;         // slot the server assigned in ACCEPT
+    private volatile int session = 0;       // session id the server assigned in ACCEPT
+    private volatile String roomCode = "";  // 4-digit code announced by the server
+    private volatile int maxPlayers = 4;    // capacity of the room (ANNOUNCE)
+    private volatile boolean matchRunning = false; // the room is already in a match (ANNOUNCE)
+    private volatile int rejectReason = 0;  // reason of the last REJECT
+    private volatile Roster roster = Roster.empty(); // who is in the room and in which colour
     private volatile StatePacket.Snapshot latestSnapshot;
 
     /** Keepalive bookkeeping: last packet received, last ping sent, last handshake. */
@@ -57,12 +57,12 @@ public class ThreadClient extends Thread {
         try {
             conection = new DatagramSocket();
             conection.setSoTimeout(POLL_MS);
-            // El primer paso es preguntar quien hay en la red, y eso se manda
-            // a la direccion de broadcast.
+            // The first step is asking who is on the network, and that goes
+            // to the broadcast address.
             conection.setBroadcast(true);
         } catch (SocketException e) {
             e.printStackTrace();
-            throw new IOException("No se pudo crear el socket del cliente", e);
+            throw new IOException("Could not create the client socket", e);
         }
     }
 
@@ -175,7 +175,7 @@ public class ThreadClient extends Thread {
         try {
             sendSession(header);
         } catch (IOException ignored) {
-            // si no se puede enviar, el timeout del loop reintenta
+            // if it cannot be sent, the loop timeout retries
         }
     }
 
@@ -183,7 +183,7 @@ public class ThreadClient extends Thread {
         try {
             sendDiscover();
         } catch (IOException ignored) {
-            // si no se puede enviar, el timeout del loop reintenta
+            // if it cannot be sent, the loop timeout retries
         }
     }
 
@@ -191,7 +191,7 @@ public class ThreadClient extends Thread {
         try {
             sendConnect();
         } catch (IOException ignored) {
-            // si no se puede enviar, el timeout del loop reintenta
+            // if it cannot be sent, the loop timeout retries
         }
     }
 
@@ -208,8 +208,8 @@ public class ThreadClient extends Thread {
 
     @Override
     public void run() {
-        // Primero se pregunta quien hay en la red: el CONNECT necesita el codigo
-        // de sala, y ese codigo solo llega con el ANNOUNCE.
+        // First ask who is on the network: the CONNECT needs the room code,
+        // and that code only arrives with the ANNOUNCE.
         lastHandshakeAt = System.currentTimeMillis();
         trySendDiscover();
 
@@ -223,8 +223,8 @@ public class ThreadClient extends Thread {
                 if (status == Status.REJECTED)
                     return;
             } catch (SocketTimeoutException e) {
-                // el socket queda abierto durante la partida para seguir mandando
-                // input; el timeout solo marca el ritmo del keepalive
+                // the socket stays open during the match to keep sending
+                // input; the timeout only paces the keepalive
             } catch (SocketException e) {
                 if (running)
                     e.printStackTrace();
@@ -286,7 +286,7 @@ public class ThreadClient extends Thread {
         switch (data[off]) {
             case NetworkHeaders.ANNOUNCE -> {
                 if (dp.getLength() >= off + 9 && data[off + 1] == ProtocolVersion.CURRENT) {
-                    ipServer = dp.getAddress();   // a partir de aca se habla con el server
+                    ipServer = dp.getAddress();   // from here on we talk to the server
                     roomCode = new String(data, off + 2, 4, StandardCharsets.US_ASCII);
                     players = data[off + 6] & 0xFF;
                     matchRunning = data[off + 7] != 0;
@@ -297,7 +297,7 @@ public class ThreadClient extends Thread {
                 }
             }
             case NetworkHeaders.ACCEPT -> {
-                ipServer = dp.getAddress();   // ya no broadcast: se habla con el server
+                ipServer = dp.getAddress();   // no more broadcast: we talk to the server
                 if (dp.getLength() >= off + 8 && data[off + 1] == ProtocolVersion.CURRENT) {
                     session = data[off + 2] & 0xFF;
                     slot = data[off + 3] & 0xFF;
@@ -324,10 +324,10 @@ public class ThreadClient extends Thread {
             }
             case NetworkHeaders.START -> {
                 status = Status.STARTED;
-                StartFlag.startFlag = true;   // la WaitingMenu la lee en el render thread
+                StartFlag.startFlag = true;   // the WaitingMenu reads it on the render thread
             }
             case NetworkHeaders.PONG -> {
-                // el keepalive ya se contabilizo al recibir el datagrama
+                // the keepalive was already counted when the datagram arrived
             }
         }
     }
@@ -351,14 +351,14 @@ public class ThreadClient extends Thread {
         disconnect();
     }
 
-    /** Cierra el socket y corta el hilo. El server libera el slot con DISCONNECT. */
+    /** Closes the socket and stops the thread. The server frees the slot on DISCONNECT. */
     public void disconnect() {
         running = false;
         try {
             if (conection != null && !conection.isClosed())
                 sendSession(NetworkHeaders.DISCONNECT);
         } catch (IOException ignored) {
-            // si no se puede avisar, el server lo detecta por timeout
+            // if it cannot be told, the server detects it by timeout
         }
         if (conection != null)
             conection.close();

@@ -8,17 +8,33 @@ to Semantic Versioning.
 
 ## [Unreleased]
 
+---
+
+## [0.8.0] - 2026-11-16
+
 ### Added
 
 * Added an animated splash screen with a glowing logo and transition to the loading screen.
 * Added a loading screen with a percentage indicator, rounded progress bar, and background image.
 * Added Tiled map loading through `AssetManager`.
+* Added a yellow highlight on a hand while the server reports it holding a rock, so a grab can be told apart from a hit.
+* Added a rock wall (`Rock6`) on the left of the starting platform. Together with `Rock5` it forms a chimney about 1.9 m wide, and the spawn point moved into it, so every player starts within reach of a wall.
+
+### Changed
+
+* Changed the packaged game name from `CucoProject` to `ToTheTop` (`ToTheTop-<version>.jar`, `ToTheTop.exe`).
+* Changed the remaining Spanish text (waiting room, victory screen, rejection reasons, and code comments) to English.
 
 ### Fixed
 
 * Fixed disposal of menu stages, generated textures, player textures, and replaced screens.
+* Fixed minimizing the game (for example with alt-tab) leaving the match running with the cursor captured. The pause menu now opens, and the zero window size reported while minimized is ignored.
+* Fixed the world being drawn with the viewport of the last menu stage instead of the game viewport.
+* Fixed the hand stopping after a few upward drags, because the invisible cursor was clamped to the edges of the screen.
+* Fixed the world pointer sent to the server moving with the camera. A hanging character was pushed further in the direction it was already swinging, because the server read the camera motion as hand drag and climbing pull.
 
 ---
+
 ## [0.7.0] - 2026-10-08
 
 ### Added

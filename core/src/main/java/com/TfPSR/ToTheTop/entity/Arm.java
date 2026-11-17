@@ -16,6 +16,19 @@ public class Arm {
     private static final float FOREARM_HEIGHT_RATIO = 0.4f;
     private static final float HAND_HEIGHT_RATIO = 0.13f;
 
+    /**
+     * Colour of a hand that is holding a rock. A hand that grabbed and a hand
+     * that only hit the rock look the same otherwise, so the player could not
+     * tell whether the release worked.
+     */
+    private static final Color GRIP_TINT = new Color(1f, 0.92f, 0.35f, 1f);
+
+    /** Colour of the slot, kept to restore the hand when it lets go. */
+    private final Color tint = new Color(Color.WHITE);
+
+    /** True while the server reports this hand holding a rock. */
+    private boolean gripping;
+
 
 
     public Arm(Vector2 position, Vector2 size) {
@@ -60,7 +73,13 @@ public class Arm {
         sprite.setRotation(angleDeg);
     }
 
+    /** Called with the grip mask of every state packet. */
+    public void setGripping(boolean gripping) {
+        this.gripping = gripping;
+    }
+
     public void draw(Batch batch) {
+        spriteHand.setColor(gripping ? GRIP_TINT : tint);
 
         spriteUpperArm.draw(batch);
         spriteForearm.draw(batch);
@@ -69,6 +88,7 @@ public class Arm {
 
     /** Tints the three segments with the colour of its slot. */
     public void setTint(Color color) {
+        tint.set(color);
         spriteUpperArm.setColor(color);
         spriteForearm.setColor(color);
         spriteHand.setColor(color);
