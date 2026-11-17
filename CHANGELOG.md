@@ -8,6 +8,10 @@ to Semantic Versioning.
 
 ## [Unreleased]
 
+---
+
+## [0.8.0] - 2026-11-16
+
 ### Added
 
 * Added an animated splash screen with a glowing logo and transition to the loading screen.
@@ -17,8 +21,10 @@ to Semantic Versioning.
 ### Fixed
 
 * Fixed disposal of menu stages, generated textures, player textures, and replaced screens.
+* Fixed the world pointer sent to the server moving with the camera. A hanging character was pushed further in the direction it was already swinging, because the server read the camera motion as hand drag and climbing pull.
 
 ---
+
 ## [0.7.0] - 2026-10-08
 
 ### Added
