@@ -147,6 +147,10 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void draw() {
+        // The menus draw with their own stage viewports and leave the GL
+        // viewport set to theirs; the world must always use the game one.
+        viewport.apply();
+
         terrainRenderer.render(camera.combined);
 
         mapRenderer.setView(camera);
@@ -449,8 +453,23 @@ public class GameScreen extends ScreenAdapter {
         eventTicksRemaining = EVENT_REPEAT_TICKS;
     }
 
+    /**
+     * Called when the window is minimized, for example by alt-tab out of the
+     * fullscreen game. The match keeps running on the server, so the player
+     * comes back to the pause menu instead of to a hand still being dragged.
+     */
+    @Override
+    public void pause() {
+        if (!victoryScreen.isVisible())
+            pauseGame();
+    }
+
     @Override
     public void resize(int width, int height){
+        // A minimized window reports a size of zero: keep the last real one.
+        if (width <= 0 || height <= 0)
+            return;
+
         viewport.update(width, height);
 
         pauseMenu.resize(width, height);
