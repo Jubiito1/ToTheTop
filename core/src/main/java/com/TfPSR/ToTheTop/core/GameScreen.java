@@ -35,6 +35,13 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public class GameScreen extends ScreenAdapter {
     private static final float INPUT_INTERVAL = 1f / 60f;   // fixed simulation rate of the server
     private static final int MAX_INPUTS_PER_FRAME = 5;      // avoids a burst after a freeze
+
+    /**
+     * World meters the virtual pointer moves per raw mouse count. A fixed
+     * factor keeps the hand speed identical on every window size, resolution
+     * and camera zoom; only the mouse DPI (a user setting) changes it.
+     */
+    private static final float POINTER_METERS_PER_COUNT = 0.0125f;
     private static final int EVENT_REPEAT_TICKS = 3;        // a lost datagram does not lose the event
     private static final int MAX_PLAYERS = 4;
     private static final Vector2 CHARACTER_SIZE = new Vector2(0.6f, 1.80f);
@@ -69,8 +76,6 @@ public class GameScreen extends ScreenAdapter {
 
     private final ThreadClient network;
     private final Vector2 worldPointer = new Vector2();  // virtual cursor, in world meters
-    private final Vector2 pointerFrom = new Vector2();   // scratch vectors for the delta in meters
-    private final Vector2 pointerTo = new Vector2();
     private float inputAccumulator;
     private int pendingEvents;                           // events to repeat over the next ticks
     private int eventTicksRemaining;
@@ -388,32 +393,21 @@ public class GameScreen extends ScreenAdapter {
     }
 
     /**
-     * Moves the virtual world cursor with the mouse delta. The cursor is
+     * Moves the virtual world cursor with the raw mouse delta. The cursor is
      * captured, so GLFW gives no real position: the deltas are accumulated.
      *
-     * <p>The delta is converted to meters with the same camera before and
-     * after, so when the camera follows the character the pointer does not
-     * move with it. The server reads the pointer speed as the hand drag and
-     * the climbing pull; if it included the camera motion, a hanging
-     * character that swings would push itself further in the direction it
-     * is already going.
+     * <p>The delta is scaled by a fixed factor instead of being unprojected
+     * through the camera. That keeps the pointer independent of the window
+     * size, the resolution, the zoom and the camera following the character
+     * (a swinging character must not push itself through its own camera).
      *
      * <p>It is not limited to the screen edges: the cursor is never drawn and
-     * the server only uses its movement. With the limit, after a few upward
-     * drags the cursor stuck to the edge and the hand stopped rising.
+     * the server only uses its movement.
      */
     private void updatePointer() {
         Vector2 delta = inputProcessor.getMouseDelta();
-        float centerX = Gdx.graphics.getWidth() / 2f;
-        float centerY = Gdx.graphics.getHeight() / 2f;
-
-        pointerFrom.set(centerX, centerY);
-        viewport.unproject(pointerFrom);
-
-        pointerTo.set(centerX + delta.x, centerY + delta.y);
-        viewport.unproject(pointerTo);
-
-        worldPointer.add(pointerTo).sub(pointerFrom);
+        // screen Y grows downwards, world Y grows upwards
+        worldPointer.add(delta.x * POINTER_METERS_PER_COUNT, -delta.y * POINTER_METERS_PER_COUNT);
     }
 
 
