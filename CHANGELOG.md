@@ -23,6 +23,7 @@ to Semantic Versioning.
 * Fixed disposal of menu stages, generated textures, player textures, and replaced screens.
 * Fixed minimizing the game (for example with alt-tab) leaving the match running with the cursor captured. The pause menu now opens, and the zero window size reported while minimized is ignored.
 * Fixed the world being drawn with the viewport of the last menu stage instead of the game viewport.
+* Fixed the hand stopping after a few upward drags, because the invisible cursor was clamped to the edges of the screen.
 * Fixed the world pointer sent to the server moving with the camera. A hanging character was pushed further in the direction it was already swinging, because the server read the camera motion as hand drag and climbing pull.
 
 ---
