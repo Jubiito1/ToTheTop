@@ -71,6 +71,8 @@ public class GameScreen extends ScreenAdapter {
     private final ThreadClient network;
     private final Vector2 pointer = new Vector2();       // cursor virtual, en pixeles de pantalla
     private final Vector2 worldPointer = new Vector2();  // mismo punto, en metros de mundo
+    private final Vector2 pointerFrom = new Vector2();   // auxiliares para el delta en metros
+    private final Vector2 pointerTo = new Vector2();
     private float inputAccumulator;
     private int pendingEvents;                           // eventos a repetir en los proximos ticks
     private int eventTicksRemaining;
@@ -386,17 +388,30 @@ public class GameScreen extends ScreenAdapter {
     }
 
     /**
-     * Convierte el cursor capturado en una posicion absoluta de mundo. Acumula
-     * los deltas porque GLFW no reporta un cursor real cuando esta capturado, y
-     * lo limita a la pantalla para que el puntero no se escape del viewport.
+     * Convierte el cursor capturado en una posicion de mundo. Acumula los deltas
+     * porque GLFW no reporta un cursor real cuando esta capturado, y lo limita a
+     * la pantalla para que el puntero no se escape del viewport.
+     *
+     * <p>Solo el movimiento del mouse mueve el puntero de mundo: el delta se
+     * pasa a metros con la misma camara antes y despues, asi que cuando la
+     * camara sigue al personaje el puntero no se mueve con ella. El server lee
+     * la velocidad del puntero como el arrastre de la mano y el tiron de
+     * escalada; si incluyera el movimiento de la camara, un personaje colgado
+     * que se balancea se empujaria solo en la direccion en la que ya va.
      */
     private void updatePointer() {
         Vector2 delta = inputProcessor.getMouseDelta();
+
+        pointerFrom.set(pointer);
+        viewport.unproject(pointerFrom);
+
         pointer.x = MathUtils.clamp(pointer.x + delta.x, 0f, Gdx.graphics.getWidth());
         pointer.y = MathUtils.clamp(pointer.y + delta.y, 0f, Gdx.graphics.getHeight());
 
-        worldPointer.set(pointer);
-        viewport.unproject(worldPointer);
+        pointerTo.set(pointer);
+        viewport.unproject(pointerTo);
+
+        worldPointer.add(pointerTo).sub(pointerFrom);
     }
 
 
