@@ -33,9 +33,9 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class GameScreen extends ScreenAdapter {
-    private static final float INPUT_INTERVAL = 1f / 60f;   // ritmo fijo de simulacion del server
-    private static final int MAX_INPUTS_PER_FRAME = 5;      // evita una avalancha tras un freeze
-    private static final int EVENT_REPEAT_TICKS = 3;        // un datagrama perdido no pierde el evento
+    private static final float INPUT_INTERVAL = 1f / 60f;   // fixed simulation rate of the server
+    private static final int MAX_INPUTS_PER_FRAME = 5;      // avoids a burst after a freeze
+    private static final int EVENT_REPEAT_TICKS = 3;        // a lost datagram does not lose the event
     private static final int MAX_PLAYERS = 4;
     private static final Vector2 CHARACTER_SIZE = new Vector2(0.6f, 1.80f);
     private static final float SNAPSHOT_INTERVAL = 1f / 60f;
@@ -68,11 +68,11 @@ public class GameScreen extends ScreenAdapter {
     private final InputMultiplexer inputMultiplexer;
 
     private final ThreadClient network;
-    private final Vector2 worldPointer = new Vector2();  // cursor virtual, en metros de mundo
-    private final Vector2 pointerFrom = new Vector2();   // auxiliares para el delta en metros
+    private final Vector2 worldPointer = new Vector2();  // virtual cursor, in world meters
+    private final Vector2 pointerFrom = new Vector2();   // scratch vectors for the delta in meters
     private final Vector2 pointerTo = new Vector2();
     private float inputAccumulator;
-    private int pendingEvents;                           // eventos a repetir en los proximos ticks
+    private int pendingEvents;                           // events to repeat over the next ticks
     private int eventTicksRemaining;
 
     /** The two newest snapshots and how far rendering is between them. */
@@ -340,8 +340,8 @@ public class GameScreen extends ScreenAdapter {
     }
 
     /**
-     * Manda el input a ritmo fijo (60 Hz) y no una vez por frame, para que el
-     * server reciba un flujo estable aunque el render vaya a otra tasa.
+     * Sends the input at a fixed rate (60 Hz) and not once per frame, so the
+     * server receives a steady stream even when rendering runs at another rate.
      */
     private void sendInput(float delta) {
         if (victoryScreen.isVisible())
@@ -368,8 +368,8 @@ public class GameScreen extends ScreenAdapter {
                     pendingEvents = 0;
             }
 
-            // Mientras esta pausado no manda botones ni teclas, pero el tick
-            // sigue saliendo para entregar los eventos de pausa y reanudacion.
+            // While paused it sends no buttons or keys, but the tick keeps
+            // going out to deliver the pause and resume events.
             boolean active = !paused;
             network.sendInput(
                     worldPointer.x, worldPointer.y,
@@ -380,24 +380,25 @@ public class GameScreen extends ScreenAdapter {
                     events);
         }
 
-        // si el frame se fue muy largo, se descarta el atraso en vez de acumularlo
+        // if the frame took too long, the backlog is dropped instead of accumulated
         if (inputAccumulator > INPUT_INTERVAL * MAX_INPUTS_PER_FRAME)
             inputAccumulator = 0f;
     }
 
     /**
-     * Mueve el cursor virtual de mundo con el delta del mouse. El cursor esta
-     * capturado, asi que GLFW no da una posicion real: se acumulan los deltas.
+     * Moves the virtual world cursor with the mouse delta. The cursor is
+     * captured, so GLFW gives no real position: the deltas are accumulated.
      *
-     * <p>El delta se pasa a metros con la misma camara antes y despues, asi que
-     * cuando la camara sigue al personaje el puntero no se mueve con ella. El
-     * server lee la velocidad del puntero como el arrastre de la mano y el
-     * tiron de escalada; si incluyera el movimiento de la camara, un personaje
-     * colgado que se balancea se empujaria solo en la direccion en la que ya va.
+     * <p>The delta is converted to meters with the same camera before and
+     * after, so when the camera follows the character the pointer does not
+     * move with it. The server reads the pointer speed as the hand drag and
+     * the climbing pull; if it included the camera motion, a hanging
+     * character that swings would push itself further in the direction it
+     * is already going.
      *
-     * <p>No se limita a los bordes de la pantalla: el cursor no se dibuja y el
-     * server solo usa su movimiento. Con el limite, despues de unos arrastres
-     * hacia arriba el cursor quedaba pegado al borde y la mano dejaba de subir.
+     * <p>It is not limited to the screen edges: the cursor is never drawn and
+     * the server only uses its movement. With the limit, after a few upward
+     * drags the cursor stuck to the edge and the hand stopped rising.
      */
     private void updatePointer() {
         Vector2 delta = inputProcessor.getMouseDelta();

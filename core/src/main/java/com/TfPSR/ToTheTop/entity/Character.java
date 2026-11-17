@@ -38,7 +38,7 @@ public class Character {
         Vector2 armsSize = new Vector2(size.x * ARMS_WIDTH_RATIO, size.y * ARMS_HEIGHT_RATIO);
         Vector2 legsSize = new Vector2(size.x * LEGS_WIDTH_RATIO, size.y * LEGS_HEIGHT_RATIO);
 
-        // Posición de cada brazo, a los costados del torso (misma fórmula de tu versión original)
+        // Position of each arm, at the sides of the torso (same formula as the server)
         Vector2 leftArmPosition  = new Vector2(position.x - (torsoSize.x / 2) - (armsSize.x / 2),position.y + (size.y / 2) - headSize.y - (armsSize.y / 2));
         Vector2 rightArmPosition = new Vector2(position.x + (torsoSize.x / 2) + (armsSize.x / 2),position.y + (size.y / 2) - headSize.y - (armsSize.y / 2));
 
