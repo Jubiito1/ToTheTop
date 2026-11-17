@@ -17,10 +17,12 @@ to Semantic Versioning.
 * Added an animated splash screen with a glowing logo and transition to the loading screen.
 * Added a loading screen with a percentage indicator, rounded progress bar, and background image.
 * Added Tiled map loading through `AssetManager`.
+* Added a yellow highlight on a hand while the server reports it holding a rock, so a grab can be told apart from a hit.
 * Added a rock wall (`Rock6`) on the left of the starting platform. Together with `Rock5` it forms a chimney about 1.9 m wide, and the spawn point moved into it, so every player starts within reach of a wall.
 
 ### Changed
 
+* Changed the packaged game name from `CucoProject` to `ToTheTop` (`ToTheTop-<version>.jar`, `ToTheTop.exe`).
 * Changed the remaining Spanish text (waiting room, victory screen, rejection reasons, and code comments) to English.
 
 ### Fixed
