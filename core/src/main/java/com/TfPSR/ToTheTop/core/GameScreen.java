@@ -27,7 +27,6 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -69,8 +68,7 @@ public class GameScreen extends ScreenAdapter {
     private final InputMultiplexer inputMultiplexer;
 
     private final ThreadClient network;
-    private final Vector2 pointer = new Vector2();       // cursor virtual, en pixeles de pantalla
-    private final Vector2 worldPointer = new Vector2();  // mismo punto, en metros de mundo
+    private final Vector2 worldPointer = new Vector2();  // cursor virtual, en metros de mundo
     private final Vector2 pointerFrom = new Vector2();   // auxiliares para el delta en metros
     private final Vector2 pointerTo = new Vector2();
     private float inputAccumulator;
@@ -112,10 +110,6 @@ public class GameScreen extends ScreenAdapter {
         terrainRenderer = new TerrainRenderer(map.getSurfaceObjects());
 
         spawn = map.getPlayerSpawn();
-
-        // el cursor esta capturado: el puntero real no es una posicion valida, asi
-        // que se reconstruye acumulando deltas y se arranca desde el centro
-        pointer.set(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f);
 
         inputProcessor = new GameInputProcessor(this);
         victoryScreen = new VictoryScreen(assetService, game, network, inputProcessor);
@@ -392,27 +386,28 @@ public class GameScreen extends ScreenAdapter {
     }
 
     /**
-     * Convierte el cursor capturado en una posicion de mundo. Acumula los deltas
-     * porque GLFW no reporta un cursor real cuando esta capturado, y lo limita a
-     * la pantalla para que el puntero no se escape del viewport.
+     * Mueve el cursor virtual de mundo con el delta del mouse. El cursor esta
+     * capturado, asi que GLFW no da una posicion real: se acumulan los deltas.
      *
-     * <p>Solo el movimiento del mouse mueve el puntero de mundo: el delta se
-     * pasa a metros con la misma camara antes y despues, asi que cuando la
-     * camara sigue al personaje el puntero no se mueve con ella. El server lee
-     * la velocidad del puntero como el arrastre de la mano y el tiron de
-     * escalada; si incluyera el movimiento de la camara, un personaje colgado
-     * que se balancea se empujaria solo en la direccion en la que ya va.
+     * <p>El delta se pasa a metros con la misma camara antes y despues, asi que
+     * cuando la camara sigue al personaje el puntero no se mueve con ella. El
+     * server lee la velocidad del puntero como el arrastre de la mano y el
+     * tiron de escalada; si incluyera el movimiento de la camara, un personaje
+     * colgado que se balancea se empujaria solo en la direccion en la que ya va.
+     *
+     * <p>No se limita a los bordes de la pantalla: el cursor no se dibuja y el
+     * server solo usa su movimiento. Con el limite, despues de unos arrastres
+     * hacia arriba el cursor quedaba pegado al borde y la mano dejaba de subir.
      */
     private void updatePointer() {
         Vector2 delta = inputProcessor.getMouseDelta();
+        float centerX = Gdx.graphics.getWidth() / 2f;
+        float centerY = Gdx.graphics.getHeight() / 2f;
 
-        pointerFrom.set(pointer);
+        pointerFrom.set(centerX, centerY);
         viewport.unproject(pointerFrom);
 
-        pointer.x = MathUtils.clamp(pointer.x + delta.x, 0f, Gdx.graphics.getWidth());
-        pointer.y = MathUtils.clamp(pointer.y + delta.y, 0f, Gdx.graphics.getHeight());
-
-        pointerTo.set(pointer);
+        pointerTo.set(centerX + delta.x, centerY + delta.y);
         viewport.unproject(pointerTo);
 
         worldPointer.add(pointerTo).sub(pointerFrom);
