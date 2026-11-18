@@ -143,7 +143,7 @@ def build(seed):
 
 
 def floor_poly():
-    """Wide floor: slightly uneven top surface at y = 0, 3 m thick, past both sides."""
+    """Wide floor: slightly uneven top surface at y = 0, 20 m deep so the camera never shows the void below it."""
     rng = random.Random(7)
     left, right = -FLOOR_MARGIN_M, MAP_W_TILES + FLOOR_MARGIN_M
     top = []
@@ -152,7 +152,7 @@ def floor_poly():
         top.append((x, rng.uniform(-0.12, 0.12)))
         x += 2.5
     top.append((right, 0.0))
-    return top + [(right, -3.0), (left, -3.0)]
+    return top + [(right, -20.0), (left, -20.0)]
 
 
 def validate(rocks):
@@ -239,6 +239,8 @@ def write_tmx(rocks, path, time_limit):
     peak_y = max(p[1] for p in summit)
     sx0, sy0 = to_px(17.0 - 2.0, peak_y + 4.0)    # rectangle top-left (TMX y down)
     s_w, s_h = 4.0 * PPM, 3.6 * PPM                # from 0.4 m above the peak to 4 m above
+    min_x = min(p[0] for pts in rocks.values() for p in pts)
+    max_x = max(p[0] for pts in rocks.values() for p in pts)
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         f'<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" '
@@ -254,6 +256,9 @@ def write_tmx(rocks, path, time_limit):
         '   </object>',
         f'   <object id="2" name="Summit" type="Goal" x="{round(sx0)}" y="{round(sy0)}" '
         f'width="{round(s_w)}" height="{round(s_h)}"/>',
+        # side limits 10 m past the outermost rocks (invisible walls + camera stop)
+        f'   <object id="{len(rocks) + 8}" name="PlayArea" type="Bounds" x="{round((min_x - 10) * PPM)}" y="{-30 * PPM}" '
+        f'width="{round((max_x - min_x + 20) * PPM)}" height="{MAP_H + 18 * PPM + 30 * PPM}"/>',
         '  </objectgroup>',
         '  <objectgroup id="4" name="Surface">',
     ]

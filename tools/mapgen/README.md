@@ -4,7 +4,8 @@ Python 3 scripts that generate and validate the climbing map (`assets/maps/map.t
 They are a design aid only: the game loads the `.tmx`, not these scripts.
 
 - `mapgen.py`: geometry helpers (irregular rock shapes, rock-to-rock distance),
-  the wide floor, a rock-free spawn and the TMX writer. Map size and floor live here.
+  the wide and deep floor, a rock-free spawn, the `PlayArea` side limits (10 m past
+  the outermost rocks) and the TMX writer. Map size and floor live here.
 - `mapgen3.py`: grows rocks from any existing rock in any upward or sideways
   direction (forks, crossings and dead ends instead of fixed lanes), then checks
   that nothing overlaps, that unrelated rocks keep 1.2 m apart (the body passes

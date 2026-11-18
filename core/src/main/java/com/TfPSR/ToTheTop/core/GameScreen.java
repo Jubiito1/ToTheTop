@@ -27,13 +27,16 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class GameScreen extends ScreenAdapter {
     private static final float INPUT_INTERVAL = 1f / 60f;   // fixed simulation rate of the server
+    private static final float CAMERA_ZOOM = 1.5f;
     private static final int MAX_INPUTS_PER_FRAME = 5;      // avoids a burst after a freeze
 
     /**
@@ -58,6 +61,8 @@ public class GameScreen extends ScreenAdapter {
     /** One character per slot, created from the first snapshot that mentions it. */
     private final Character[] players = new Character[MAX_PLAYERS];
     private final Vector2 spawn;
+    /** Side limits of the level the camera never looks past, or null if the map has none. */
+    private final Rectangle playArea;
 
     /** Colour and name label of every slot, rebuilt when the roster changes. */
     private final Color[] slotTints = new Color[MAX_PLAYERS];
@@ -116,6 +121,7 @@ public class GameScreen extends ScreenAdapter {
         terrainRenderer = new TerrainRenderer(map.getSurfaceObjects());
 
         spawn = map.getPlayerSpawn();
+        playArea = map.getPlayArea();
 
         inputProcessor = new GameInputProcessor(this);
         matchEndScreen = new MatchEndScreen(assetService, game, network, inputProcessor, settingsMenu);
@@ -318,6 +324,24 @@ public class GameScreen extends ScreenAdapter {
     }
 
     /**
+     * Stops the camera at the side limits of the level: its view never goes past
+     * the left or right edge of the play area. The view width comes from the
+     * fixed-width viewport, so the limit is the same on every resolution. A play
+     * area narrower than the view is simply centered.
+     */
+    private void clampCameraToPlayArea() {
+        if (playArea == null)
+            return;
+
+        float halfView = viewport.getWorldWidth() * camera.zoom / 2f;
+        float min = playArea.x + halfView;
+        float max = playArea.x + playArea.width - halfView;
+        camera.position.x = min > max
+                ? playArea.x + playArea.width / 2f
+                : MathUtils.clamp(camera.position.x, min, max);
+    }
+
+    /**
      * Keeps the camera on the head of this client's own character, ignoring the
      * others, or on the spawn until that character arrives in the state.
      */
@@ -332,7 +356,8 @@ public class GameScreen extends ScreenAdapter {
             camera.position.set(head.x, head.y, 0);
         }
 
-        camera.zoom = 1.5f;
+        camera.zoom = CAMERA_ZOOM;
+        clampCameraToPlayArea();
         camera.update();
     }
 
