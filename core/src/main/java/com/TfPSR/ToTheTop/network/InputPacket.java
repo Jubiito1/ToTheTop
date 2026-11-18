@@ -11,6 +11,7 @@ public final class InputPacket {
 
     public static final int KEY_A = 1;
     public static final int KEY_D = 1 << 1;
+    public static final int KEY_W = 1 << 2;
 
     /** One-off events: the client repeats each bit for a few ticks. */
     public static final int EVENT_IMPULSE = 1;
@@ -23,7 +24,7 @@ public final class InputPacket {
 
     public static byte[] encode(float mouseX, float mouseY,
                                 boolean left, boolean right,
-                                boolean a, boolean d,
+                                boolean a, boolean d, boolean w,
                                 int session, int events) {
         ByteBuffer buffer = ByteBuffer.allocate(SIZE);
         buffer.put(NetworkHeaders.INPUT);
@@ -32,7 +33,7 @@ public final class InputPacket {
         buffer.putFloat(mouseX);
         buffer.putFloat(mouseY);
         buffer.put(buttons(left, right));
-        buffer.put(keys(a, d));
+        buffer.put(keys(a, d, w));
         buffer.put((byte) events);
         return buffer.array();
     }
@@ -46,12 +47,14 @@ public final class InputPacket {
         return (byte) mask;
     }
 
-    private static byte keys(boolean a, boolean d) {
+    private static byte keys(boolean a, boolean d, boolean w) {
         int mask = 0;
         if (a)
             mask |= KEY_A;
         if (d)
             mask |= KEY_D;
+        if (w)
+            mask |= KEY_W;
         return (byte) mask;
     }
 }

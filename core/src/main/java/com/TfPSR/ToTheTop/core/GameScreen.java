@@ -384,6 +384,7 @@ public class GameScreen extends ScreenAdapter {
                     active && inputProcessor.isRightMousePressed(),
                     active && inputProcessor.isAPressed(),
                     active && inputProcessor.isDPressed(),
+                    active && inputProcessor.isWPressed(),
                     events);
         }
 

@@ -196,11 +196,11 @@ public class ThreadClient extends Thread {
     }
 
     public void sendInput(float mouseX, float mouseY, boolean left, boolean right,
-                          boolean a, boolean d, int events) {
+                          boolean a, boolean d, boolean w, int events) {
         if (!running || status != Status.STARTED)
             return;
         try {
-            byte[] buf = InputPacket.encode(mouseX, mouseY, left, right, a, d, session, events);
+            byte[] buf = InputPacket.encode(mouseX, mouseY, left, right, a, d, w, session, events);
             conection.send(new DatagramPacket(buf, buf.length, ipServer, PORT));
         } catch (IOException ignored) {
         }
@@ -341,7 +341,7 @@ public class ThreadClient extends Thread {
         if (status == Status.STARTED) {
             for (int i = 0; i < 3; i++) {
                 try {
-                    byte[] buf = InputPacket.encode(0f, 0f, false, false, false, false,
+                    byte[] buf = InputPacket.encode(0f, 0f, false, false, false, false, false,
                             session, InputPacket.EVENT_LEAVE);
                     conection.send(new DatagramPacket(buf, buf.length, ipServer, PORT));
                 } catch (IOException ignored) {

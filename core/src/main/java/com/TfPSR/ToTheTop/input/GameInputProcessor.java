@@ -11,6 +11,7 @@ public class GameInputProcessor extends InputAdapter {
     private boolean rightMousePressed;
     private boolean aPressed;
     private boolean dPressed;
+    private boolean wPressed;
     private boolean impulseRequested;
     private final Vector2 mouseDelta = new Vector2();
     private final GameScreen gameScreen;
@@ -82,6 +83,11 @@ public class GameInputProcessor extends InputAdapter {
             return true;
         }
 
+        if (keycode == Input.Keys.W) {
+            wPressed = true;
+            return true;
+        }
+
         if (keycode == Input.Keys.SPACE) {
             impulseRequested = true;
             return true;
@@ -111,6 +117,11 @@ public class GameInputProcessor extends InputAdapter {
             return true;
         }
 
+        if (keycode == Input.Keys.W) {
+            wPressed = false;
+            return true;
+        }
+
         return false;
     }
 
@@ -120,6 +131,10 @@ public class GameInputProcessor extends InputAdapter {
 
     public boolean isDPressed() {
         return dPressed;
+    }
+
+    public boolean isWPressed() {
+        return wPressed;
     }
 
     /**
