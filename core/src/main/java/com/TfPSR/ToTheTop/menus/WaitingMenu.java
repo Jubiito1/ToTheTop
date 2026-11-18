@@ -8,6 +8,7 @@ import com.TfPSR.ToTheTop.asset.MusicAsset;
 import com.TfPSR.ToTheTop.asset.TextureAsset;
 import com.TfPSR.ToTheTop.core.GameScreen;
 import com.TfPSR.ToTheTop.network.NetworkHeaders;
+import com.TfPSR.ToTheTop.network.Roster;
 import com.TfPSR.ToTheTop.network.ThreadClient;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
@@ -43,13 +44,23 @@ public class WaitingMenu extends ScreenAdapter {
     private final TextButton startButton;
     private final Cell<TextButton> startCell;
     private float time;
-    private ThreadClient threadClient;
-    private boolean ready = false;
+    private final ThreadClient threadClient;
+    private final TextButton readyButton;
 
     /** True once the lobby hands its connection to the match screen. */
     private boolean handedOff = false;
 
+    /** Opens the room with a new connection, from the main menu. */
     public WaitingMenu(Main game, AssetService assetService, SettingsMenu settingsMenu) throws IOException {
+        this(game, assetService, settingsMenu, startClient());
+    }
+
+    /**
+     * Opens the room with a connection that already exists: after a match the
+     * player comes back here without leaving the server.
+     */
+    public WaitingMenu(Main game, AssetService assetService, SettingsMenu settingsMenu,
+                       ThreadClient threadClient) {
         this.game = game;
         this.assetService = assetService;
         this.settingsMenu = settingsMenu;
@@ -63,8 +74,7 @@ public class WaitingMenu extends ScreenAdapter {
         // when coming back from a previous match, the flag must start as false
         StartFlag.startFlag = false;
 
-        this.threadClient = new ThreadClient();
-        this.threadClient.start();
+        this.threadClient = threadClient;
 
         Skin skin = assetService.getSkin();
         Label.LabelStyle labelStyle = skin.get("defaultLabelStyle", Label.LabelStyle.class);
@@ -75,15 +85,14 @@ public class WaitingMenu extends ScreenAdapter {
         this.statusLabel = new Label("Searching for server", labelStyle);
         this.roomLabel = new Label("Room: ----", labelStyle);
 
-        TextButton readyButton = new TextButton("READY", skin);
+        this.readyButton = new TextButton("READY", skin);
         readyButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 if (threadClient.getStatus() == ThreadClient.Status.REJECTED)
                     return; // could not join the room, marking ready makes no sense
-                ready = !ready;
-                threadClient.setReady(ready);
-                readyButton.setText(ready ? "READY (OK)" : "READY");
+                // The server owns the ready flag: toggle what it last announced.
+                threadClient.setReady(!isReadyOnServer());
             }
         });
 
@@ -122,15 +131,39 @@ public class WaitingMenu extends ScreenAdapter {
         stage.addActor(table);
     }
 
+    private static ThreadClient startClient() throws IOException {
+        ThreadClient client = new ThreadClient();
+        client.start();
+        return client;
+    }
+
+    /** Ready flag of this player as the server last announced it. */
+    private boolean isReadyOnServer() {
+        Roster.Entry own = threadClient.getRoster().entry(threadClient.getSlot());
+        return own != null && own.ready();
+    }
+
     /** Status text of the room, following what the server answers. */
     private String statusText(String dots) {
         return switch (threadClient.getStatus()) {
             case REJECTED -> rejectText() + dots;
-            case ACCEPTED, STARTED -> "Connected  |  " + threadClient.getPlayers() + "/"
-                    + threadClient.getMaxPlayers() + " players  |  "
-                    + threadClient.getReadyCount() + " ready (min. 2)" + dots;
+            case ACCEPTED, STARTED -> roomText() + dots;
             default -> "Searching for server" + dots;
         };
+    }
+
+    /** Players, ready count, who is still on the results and whether this player hosts. */
+    private String roomText() {
+        Roster roster = threadClient.getRoster();
+        String text = "Connected  |  " + threadClient.getPlayers() + "/"
+                + threadClient.getMaxPlayers() + " players  |  "
+                + threadClient.getReadyCount() + " ready (min. 2)";
+        int onResults = roster.playersOnResults();
+        if (onResults > 0)
+            text += "  |  waiting for " + onResults + " on the results";
+        if (threadClient.isHost())
+            text += "  |  you are the host";
+        return text;
     }
 
     /** Reason of the rejection, so the player knows what to fix. */
@@ -180,9 +213,13 @@ public class WaitingMenu extends ScreenAdapter {
         String code = threadClient.getRoomCode();
         roomLabel.setText("Room: " + (code.isEmpty() ? "----" : code));
 
-        // The button only exists for the host, once joined and with two ready.
+        readyButton.setText(isReadyOnServer() ? "READY (OK)" : "READY");
+
+        // The button only exists for the host, in the room, once every player
+        // is back from the results and with two ready.
         boolean canStart = threadClient.isHost()
-                && threadClient.getStatus() == ThreadClient.Status.ACCEPTED
+                && threadClient.isInRoom()
+                && threadClient.getRoster().phase() == Roster.PHASE_LOBBY
                 && threadClient.getReadyCount() >= 2;
         startCell.setActor(canStart ? startButton : null);
 

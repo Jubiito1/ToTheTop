@@ -52,6 +52,9 @@ public class ThreadClient extends Thread {
     /** Set when the server stops answering, so the screens can go back to the menu. */
     private volatile boolean connectionLost = false;
 
+    /** True after "Play again" until the server shows this player back in the room. */
+    private volatile boolean returningToLobby = false;
+
     public ThreadClient() throws IOException {
         ipServer = InetAddress.getByName("255.255.255.255");
         try {
@@ -83,9 +86,33 @@ public class ThreadClient extends Thread {
         return slot;
     }
 
-    /** Slot 0 is the host: only it asks the server to start the match. */
+    /**
+     * The host is the only one who asks the server to start the match. The
+     * server picks it and announces it in the roster: when the host leaves, the
+     * player who joined first takes over.
+     */
     public boolean isHost() {
-        return slot == 0;
+        return slot >= 0 && roster.hostSlot() == slot;
+    }
+
+    /** True while this client sits in the room (not in a match, not on the results). */
+    public boolean isInRoom() {
+        return status == Status.ACCEPTED;
+    }
+
+    /**
+     * Leaves the result screen and goes back to the room keeping the connection.
+     * The request is resent with the keepalive until the roster confirms it,
+     * because it travels over UDP.
+     */
+    public void returnToLobby() {
+        if (status != Status.STARTED)
+            return;
+        latestSnapshot = null;
+        wantReady = false;
+        returningToLobby = true;
+        status = Status.ACCEPTED;
+        trySendSession(NetworkHeaders.RETURN_TO_LOBBY);
     }
 
     /** True when the server stopped answering and the connection must be abandoned. */
@@ -267,10 +294,23 @@ public class ThreadClient extends Thread {
         if (now - lastPingAt >= PING_INTERVAL_MS) {
             lastPingAt = now;
             trySendSession(NetworkHeaders.PING);
+            if (returningToLobby)
+                resendReturnToLobby();
         }
 
         if (now - lastPacketAt >= SERVER_TIMEOUT_MS)
             connectionLost = true;
+    }
+
+    /** Keeps asking to return until the roster shows this player back in the room. */
+    private void resendReturnToLobby() {
+        Roster current = roster;
+        Roster.Entry own = current.entry(slot);
+        boolean confirmed = current.phase() != Roster.PHASE_FINISHED || (own != null && own.inLobby());
+        if (confirmed)
+            returningToLobby = false;
+        else
+            trySendSession(NetworkHeaders.RETURN_TO_LOBBY);
     }
 
     private void processMessage(DatagramPacket dp) {
@@ -323,8 +363,12 @@ public class ThreadClient extends Thread {
                 status = Status.REJECTED;
             }
             case NetworkHeaders.START -> {
-                status = Status.STARTED;
-                StartFlag.startFlag = true;   // the WaitingMenu reads it on the render thread
+                // Only a player waiting in the room joins a new match.
+                if (status == Status.ACCEPTED) {
+                    returningToLobby = false;
+                    status = Status.STARTED;
+                    StartFlag.startFlag = true;   // the WaitingMenu reads it on the render thread
+                }
             }
             case NetworkHeaders.PONG -> {
                 // the keepalive was already counted when the datagram arrived

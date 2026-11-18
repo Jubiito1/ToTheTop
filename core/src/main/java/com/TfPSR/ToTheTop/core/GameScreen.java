@@ -118,7 +118,7 @@ public class GameScreen extends ScreenAdapter {
         spawn = map.getPlayerSpawn();
 
         inputProcessor = new GameInputProcessor(this);
-        matchEndScreen = new MatchEndScreen(assetService, game, network, inputProcessor);
+        matchEndScreen = new MatchEndScreen(assetService, game, network, inputProcessor, settingsMenu);
         inputMultiplexer.addProcessor(pauseMenu.getStage());
         inputMultiplexer.addProcessor(inputProcessor);
         Gdx.input.setInputProcessor(inputMultiplexer);

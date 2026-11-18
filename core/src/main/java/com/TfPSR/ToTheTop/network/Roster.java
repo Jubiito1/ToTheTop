@@ -16,8 +16,19 @@ import java.util.List;
  */
 public final class Roster {
 
-    /** One player of the room. Colours are the raw bytes of the palette. */
-    public record Entry(int slot, boolean ready, int red, int green, int blue, String name) {
+    /** Room phases, as the server sends them. */
+    public static final int PHASE_LOBBY = 0;
+    public static final int PHASE_RUNNING = 1;
+    public static final int PHASE_FINISHED = 2;
+
+    /** ROSTER value of the host slot when the room is empty. */
+    private static final int NO_HOST = 0xFF;
+
+    /**
+     * One player of the room. Colours are the raw bytes of the palette.
+     * {@code inLobby} is true after a match once the player left the result screen.
+     */
+    public record Entry(int slot, boolean ready, boolean inLobby, int red, int green, int blue, String name) {
 
         /** Slot colour, ready to tint the sprites and the name label. */
         public Color color() {
@@ -25,16 +36,20 @@ public final class Roster {
         }
     }
 
-    private static final Roster EMPTY = new Roster(List.of(), 0, 0);
+    private static final Roster EMPTY = new Roster(List.of(), 0, 0, -1, PHASE_LOBBY);
 
     private final List<Entry> entries;
     private final int playerCount;
     private final int readyCount;
+    private final int hostSlot;
+    private final int phase;
 
-    private Roster(List<Entry> entries, int playerCount, int readyCount) {
+    private Roster(List<Entry> entries, int playerCount, int readyCount, int hostSlot, int phase) {
         this.entries = entries;
         this.playerCount = playerCount;
         this.readyCount = readyCount;
+        this.hostSlot = hostSlot;
+        this.phase = phase;
     }
 
     /** Roster used before the first packet arrives. */
@@ -54,6 +69,28 @@ public final class Roster {
         return readyCount;
     }
 
+    /** Slot that may start the match, or -1 with an empty room. */
+    public int hostSlot() {
+        return hostSlot;
+    }
+
+    /** {@link #PHASE_LOBBY}, {@link #PHASE_RUNNING} or {@link #PHASE_FINISHED}. */
+    public int phase() {
+        return phase;
+    }
+
+    /** Players still looking at the result screen of the last match. */
+    public int playersOnResults() {
+        if (phase != PHASE_FINISHED)
+            return 0;
+        int count = 0;
+        for (Entry entry : entries) {
+            if (!entry.inLobby())
+                count++;
+        }
+        return count;
+    }
+
     /** Entry of one slot, or {@code null} when the slot is free. */
     public Entry entry(int slot) {
         for (Entry entry : entries) {
@@ -65,7 +102,7 @@ public final class Roster {
 
     /** Decodes one received datagram, or returns {@code null} when invalid. */
     public static Roster decode(byte[] data, int offset, int length) {
-        if (data == null || length < 4)
+        if (data == null || length < 6)
             return null;
 
         ByteBuffer buffer = ByteBuffer.wrap(data, offset, length);
@@ -76,11 +113,17 @@ public final class Roster {
 
         int playerCount = buffer.get() & 0xFF;
         int readyCount = buffer.get() & 0xFF;
+        int host = buffer.get() & 0xFF;
+        int phase = buffer.get() & 0xFF;
+        if (phase > PHASE_FINISHED)
+            return null;
 
         List<Entry> entries = new ArrayList<>();
         while (buffer.remaining() >= 6) {
             int slot = buffer.get() & 0xFF;
-            boolean ready = buffer.get() != 0;
+            int flags = buffer.get() & 0xFF;
+            boolean ready = (flags & 1) != 0;
+            boolean inLobby = (flags & 2) != 0;
             int red = buffer.get() & 0xFF;
             int green = buffer.get() & 0xFF;
             int blue = buffer.get() & 0xFF;
@@ -91,10 +134,11 @@ public final class Roster {
 
             byte[] name = new byte[nameLength];
             buffer.get(name);
-            entries.add(new Entry(slot, ready, red, green, blue,
+            entries.add(new Entry(slot, ready, inLobby, red, green, blue,
                     new String(name, StandardCharsets.UTF_8)));
         }
 
-        return new Roster(List.copyOf(entries), playerCount, readyCount);
+        return new Roster(List.copyOf(entries), playerCount, readyCount,
+                host == NO_HOST ? -1 : host, phase);
     }
 }

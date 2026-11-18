@@ -27,12 +27,14 @@ public class MatchEndScreen {
     private final ThreadClient network;
     private final Main game;
     private final GameInputProcessor inputProcessor;
+    private final SettingsMenu settingsMenu;
     private boolean visible;
     private Label title;
 
     public MatchEndScreen(AssetService assetService, Main game, ThreadClient network,
-                         GameInputProcessor inputProcessor) {
+                         GameInputProcessor inputProcessor, SettingsMenu settingsMenu) {
         this.assetService = assetService;
+        this.settingsMenu = settingsMenu;
         this.game = game;
         this.network = network;
         this.inputProcessor = inputProcessor;
@@ -54,6 +56,17 @@ public class MatchEndScreen {
         title = new Label("Victory!", titleStyle);
         title.setFontScale(2f);
 
+        // Back to the waiting room with the same connection, ready for another match.
+        TextButton playAgainButton = new TextButton("Play again", skin);
+        playAgainButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                network.returnToLobby();
+                game.addScreen(new WaitingMenu(game, assetService, settingsMenu, network));
+                game.setScreen(WaitingMenu.class);
+            }
+        });
+
         TextButton menuButton = new TextButton("Back to menu", skin);
         menuButton.addListener(new ChangeListener() {
             @Override
@@ -67,6 +80,8 @@ public class MatchEndScreen {
         Table table = new Table();
         table.setFillParent(true);
         table.add(title).padBottom(32);
+        table.row();
+        table.add(playAgainButton).width(280).height(70).padBottom(16);
         table.row();
         table.add(menuButton).width(280).height(70);
         stage.addActor(table);
