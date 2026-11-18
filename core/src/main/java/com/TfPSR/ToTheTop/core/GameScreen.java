@@ -258,7 +258,7 @@ public class GameScreen extends ScreenAdapter {
     private void update(float delta) {
         refreshRoster();
         updateSnapshot(delta);
-        centerCameraOnPlayers();
+        centerCameraOnLocalPlayer();
         sendInput(delta);
     }
 
@@ -317,32 +317,19 @@ public class GameScreen extends ScreenAdapter {
         }
     }
 
-    /** Keeps the camera on every received character, or on the spawn while waiting. */
-    private void centerCameraOnPlayers() {
-        boolean found = false;
-        float minX = 0, maxX = 0, minY = 0, maxY = 0;
+    /**
+     * Keeps the camera on the head of this client's own character, ignoring the
+     * others, or on the spawn until that character arrives in the state.
+     */
+    private void centerCameraOnLocalPlayer() {
+        int slot = network.getSlot();
+        Character local = slot >= 0 && slot < players.length ? players[slot] : null;
 
-        for (Character character : players) {
-            if (character == null)
-                continue;
-
-            Vector2 position = character.getPosition();
-            if (!found) {
-                minX = maxX = position.x;
-                minY = maxY = position.y;
-                found = true;
-            } else {
-                minX = Math.min(minX, position.x);
-                maxX = Math.max(maxX, position.x);
-                minY = Math.min(minY, position.y);
-                maxY = Math.max(maxY, position.y);
-            }
-        }
-
-        if (!found) {
+        if (local == null) {
             camera.position.set(spawn.x, spawn.y, 0);
         } else {
-            camera.position.set((minX + maxX) / 2f, (minY + maxY) / 2f, 0);
+            Vector2 head = local.getPosition();
+            camera.position.set(head.x, head.y, 0);
         }
 
         camera.zoom = 1.5f;
