@@ -9,7 +9,7 @@ import com.TfPSR.ToTheTop.map.TerrainRenderer;
 import com.TfPSR.ToTheTop.menus.MainMenu;
 import com.TfPSR.ToTheTop.menus.SettingsMenu;
 import com.TfPSR.ToTheTop.menus.PauseMenu;
-import com.TfPSR.ToTheTop.menus.VictoryScreen;
+import com.TfPSR.ToTheTop.menus.MatchEndScreen;
 import com.TfPSR.ToTheTop.network.InputPacket;
 import com.TfPSR.ToTheTop.network.PartState;
 import com.TfPSR.ToTheTop.network.PlayerState;
@@ -90,7 +90,7 @@ public class GameScreen extends ScreenAdapter {
     private boolean paused = false;
     private final SettingsMenu settingsMenu;
     private final PauseMenu pauseMenu;
-    private final VictoryScreen victoryScreen;
+    private final MatchEndScreen matchEndScreen;
 
     public GameScreen(Main game, AssetService assetService, SettingsMenu settingsMenu,
                       ThreadClient network) {
@@ -117,7 +117,7 @@ public class GameScreen extends ScreenAdapter {
         spawn = map.getPlayerSpawn();
 
         inputProcessor = new GameInputProcessor(this);
-        victoryScreen = new VictoryScreen(assetService, game, network, inputProcessor);
+        matchEndScreen = new MatchEndScreen(assetService, game, network, inputProcessor);
         inputMultiplexer.addProcessor(pauseMenu.getStage());
         inputMultiplexer.addProcessor(inputProcessor);
         Gdx.input.setInputProcessor(inputMultiplexer);
@@ -168,9 +168,9 @@ public class GameScreen extends ScreenAdapter {
 
         drawNames();
 
-        if (victoryScreen.isVisible()) {
-            victoryScreen.act(Gdx.graphics.getDeltaTime());
-            victoryScreen.draw();
+        if (matchEndScreen.isVisible()) {
+            matchEndScreen.act(Gdx.graphics.getDeltaTime());
+            matchEndScreen.draw();
             return;
         }
 
@@ -274,10 +274,8 @@ public class GameScreen extends ScreenAdapter {
         if (currentSnapshot == null)
             return;
 
-        if (currentSnapshot.matchState() == StatePacket.MATCH_FINISHED
-                && currentSnapshot.result() == StatePacket.RESULT_WIN) {
-            victoryScreen.show();
-        }
+        if (currentSnapshot.matchState() == StatePacket.MATCH_FINISHED)
+            matchEndScreen.show(currentSnapshot.result() == StatePacket.RESULT_WIN);
 
         snapshotAge += delta;
         float alpha = Math.min(1f, snapshotAge / SNAPSHOT_INTERVAL);
@@ -351,7 +349,7 @@ public class GameScreen extends ScreenAdapter {
      * server receives a steady stream even when rendering runs at another rate.
      */
     private void sendInput(float delta) {
-        if (victoryScreen.isVisible())
+        if (matchEndScreen.isVisible())
             return;
 
         if (!paused)
@@ -453,7 +451,7 @@ public class GameScreen extends ScreenAdapter {
      */
     @Override
     public void pause() {
-        if (!victoryScreen.isVisible())
+        if (!matchEndScreen.isVisible())
             pauseGame();
     }
 
@@ -466,7 +464,7 @@ public class GameScreen extends ScreenAdapter {
         viewport.update(width, height);
 
         pauseMenu.resize(width, height);
-        victoryScreen.resize(width, height);
+        matchEndScreen.resize(width, height);
         settingsMenu.resize(width, height);
     }
 
@@ -479,6 +477,6 @@ public class GameScreen extends ScreenAdapter {
                 character.dispose();
         }
         pauseMenu.dispose();
-        victoryScreen.dispose();
+        matchEndScreen.dispose();
     }
 }

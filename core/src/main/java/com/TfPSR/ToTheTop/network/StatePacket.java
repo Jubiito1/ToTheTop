@@ -21,8 +21,9 @@ public final class StatePacket {
 
     public static final byte RESULT_NONE = 0;
     public static final byte RESULT_WIN = 1;
+    public static final byte RESULT_LOSE = 2;
 
-    public static final int HEADER_SIZE = 6;
+    public static final int HEADER_SIZE = 14;
     public static final int PLAYER_HEADER_SIZE = 2;
     public static final int PART_SIZE = 12;
     public static final int PLAYER_TRAILER_SIZE = 2;
@@ -38,8 +39,12 @@ public final class StatePacket {
      * One complete snapshot: the overall match state and every player in it.
      * Immutable once built, so it can be handed from the network thread to the
      * render thread without locking.
+     *
+     * @param timeRemaining seconds left before the match is lost
+     * @param timeLimit     seconds the whole match lasts
      */
     public record Snapshot(byte matchState, byte result, byte environmentMask,
+                           float timeRemaining, float timeLimit,
                            PlayerState[] players) {
     }
 
@@ -57,6 +62,10 @@ public final class StatePacket {
         byte matchState = buffer.get();
         byte result = buffer.get();
         byte environmentMask = buffer.get();
+        float timeRemaining = buffer.getFloat();
+        float timeLimit = buffer.getFloat();
+        if (!Float.isFinite(timeRemaining) || !Float.isFinite(timeLimit))
+            return null;
         int playerCount = buffer.get() & 0xFF;
         if (playerCount > 4)
             return null;
@@ -88,6 +97,6 @@ public final class StatePacket {
                     (flags & FLAG_UNCONSCIOUS) != 0);
         }
 
-        return new Snapshot(matchState, result, environmentMask, players);
+        return new Snapshot(matchState, result, environmentMask, timeRemaining, timeLimit, players);
     }
 }

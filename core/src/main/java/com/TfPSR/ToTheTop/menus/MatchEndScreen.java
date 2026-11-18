@@ -21,15 +21,16 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
  * It owns its own stage and keeps the final game world visible behind the
  * overlay, just like the pause menu.
  */
-public class VictoryScreen {
+public class MatchEndScreen {
     private final Stage stage;
     private final AssetService assetService;
     private final ThreadClient network;
     private final Main game;
     private final GameInputProcessor inputProcessor;
     private boolean visible;
+    private Label title;
 
-    public VictoryScreen(AssetService assetService, Main game, ThreadClient network,
+    public MatchEndScreen(AssetService assetService, Main game, ThreadClient network,
                          GameInputProcessor inputProcessor) {
         this.assetService = assetService;
         this.game = game;
@@ -50,7 +51,7 @@ public class VictoryScreen {
 
         Label.LabelStyle baseStyle = skin.get("defaultLabelStyle", Label.LabelStyle.class);
         Label.LabelStyle titleStyle = new Label.LabelStyle(baseStyle.font, Color.WHITE);
-        Label title = new Label("Victory!", titleStyle);
+        title = new Label("Victory!", titleStyle);
         title.setFontScale(2f);
 
         TextButton menuButton = new TextButton("Back to menu", skin);
@@ -77,11 +78,16 @@ public class VictoryScreen {
         return visible;
     }
 
-    /** Shows the modal once and gives its button exclusive input. */
-    public void show() {
+    /**
+     * Shows the modal once, with the outcome, and gives its button exclusive input.
+     *
+     * @param won true when a player reached the summit, false when time ran out
+     */
+    public void show(boolean won) {
         if (visible)
             return;
 
+        title.setText(won ? "Victory!" : "Time's up!");
         visible = true;
         inputProcessor.resetMouseButtons();
         Gdx.input.setCursorCatched(false);

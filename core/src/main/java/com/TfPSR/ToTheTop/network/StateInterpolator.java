@@ -32,7 +32,7 @@ public final class StateInterpolator {
         }
 
         return new StatePacket.Snapshot(current.matchState(), current.result(),
-                current.environmentMask(), blended);
+                current.environmentMask(), current.timeRemaining(), current.timeLimit(), blended);
     }
 
     private static PlayerState findBySlot(StatePacket.Snapshot snapshot, int slot) {
