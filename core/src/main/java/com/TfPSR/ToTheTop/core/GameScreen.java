@@ -91,6 +91,7 @@ public class GameScreen extends ScreenAdapter {
     private final SettingsMenu settingsMenu;
     private final PauseMenu pauseMenu;
     private final MatchEndScreen matchEndScreen;
+    private final TimeWarningOverlay timeWarning = new TimeWarningOverlay();
 
     public GameScreen(Main game, AssetService assetService, SettingsMenu settingsMenu,
                       ThreadClient network) {
@@ -167,6 +168,10 @@ public class GameScreen extends ScreenAdapter {
         batch.end();
 
         drawNames();
+
+        // Running out of time tints the screen red; hidden once the match ended.
+        if (currentSnapshot != null && currentSnapshot.matchState() == StatePacket.MATCH_RUNNING)
+            timeWarning.draw(batch, currentSnapshot.timeRemaining(), currentSnapshot.timeLimit());
 
         if (matchEndScreen.isVisible()) {
             matchEndScreen.act(Gdx.graphics.getDeltaTime());
@@ -478,5 +483,6 @@ public class GameScreen extends ScreenAdapter {
         }
         pauseMenu.dispose();
         matchEndScreen.dispose();
+        timeWarning.dispose();
     }
 }
