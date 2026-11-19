@@ -1,6 +1,7 @@
 package com.TfPSR.ToTheTop.map;
 
 import com.TfPSR.ToTheTop.core.Constants;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObject;
@@ -38,8 +39,12 @@ public class TerrainRenderer implements Disposable {
     private final ShapeRenderer shapes = new ShapeRenderer();
     private final Array<Triangle> triangles = new Array<>();
     private final Array<Outline> outlines = new Array<>();
+    /** Breakable rocks, in map order like their state in the STATE packet. */
+    private final Array<BreakableRockView> breakables = new Array<>();
+    private float time;
 
     public TerrainRenderer(MapObjects surfaces) {
+        EarClippingTriangulator triangulator = new EarClippingTriangulator();
         Array<float[]> rocks = new Array<>();
         for (MapObject object : surfaces) {
             if (!(object instanceof PolygonMapObject polygon))
@@ -49,7 +54,11 @@ public class TerrainRenderer implements Disposable {
             float[] meters = new float[pixels.length];
             for (int i = 0; i < pixels.length; i++)
                 meters[i] = pixels[i] / Constants.PIXELS_PER_METER;
-            rocks.add(meters);
+            // Breakable rocks are drawn apart, from their live state.
+            if (BreakableRockView.isBreakable(object))
+                breakables.add(new BreakableRockView(meters, triangulator));
+            else
+                rocks.add(meters);
         }
 
         // The summit is the rock that reaches highest; the others whiten
@@ -68,7 +77,6 @@ public class TerrainRenderer implements Disposable {
             highest = Math.max(highest, topOf(rocks.get(i)));
         }
 
-        EarClippingTriangulator triangulator = new EarClippingTriangulator();
         for (int i = 0; i < rocks.size; i++) {
             float[] meters = rocks.get(i);
             Color fill;
@@ -107,7 +115,12 @@ public class TerrainRenderer implements Disposable {
         return top;
     }
 
-    public void render(Matrix4 projection) {
+    /**
+     * @param breakableStates state of every breakable rock from the server (wear
+     *                        0..200, 255 broken), or {@code null} before the first state
+     */
+    public void render(Matrix4 projection, byte[] breakableStates) {
+        time += Gdx.graphics.getDeltaTime();
         shapes.setProjectionMatrix(projection);
 
         shapes.begin(ShapeRenderer.ShapeType.Filled);
@@ -117,6 +130,8 @@ public class TerrainRenderer implements Disposable {
                     triangle.x2, triangle.y2,
                     triangle.x3, triangle.y3);
         }
+        for (int i = 0; i < breakables.size; i++)
+            breakables.get(i).drawFill(shapes, breakableState(breakableStates, i), time);
         shapes.end();
 
         shapes.begin(ShapeRenderer.ShapeType.Line);
@@ -124,7 +139,14 @@ public class TerrainRenderer implements Disposable {
             shapes.setColor(outline.color);
             shapes.polygon(outline.vertices);
         }
+        for (int i = 0; i < breakables.size; i++)
+            breakables.get(i).drawOutline(shapes, breakableState(breakableStates, i), time);
         shapes.end();
+    }
+
+    /** State byte of one breakable rock, intact (0) when the server has not sent it yet. */
+    private static int breakableState(byte[] states, int index) {
+        return states != null && index < states.length ? states[index] & 0xFF : 0;
     }
 
     @Override

@@ -42,10 +42,12 @@ public final class StatePacket {
      *
      * @param timeRemaining seconds left before the match is lost
      * @param timeLimit     seconds the whole match lasts
+     * @param breakables    state of every breakable rock in map order: wear
+     *                      0..200, or 255 while broken
      */
     public record Snapshot(byte matchState, byte result, byte environmentMask,
                            float timeRemaining, float timeLimit,
-                           PlayerState[] players) {
+                           PlayerState[] players, byte[] breakables) {
     }
 
     /** Decodes one received datagram, or returns {@code null} when invalid. */
@@ -97,6 +99,15 @@ public final class StatePacket {
                     (flags & FLAG_UNCONSCIOUS) != 0);
         }
 
-        return new Snapshot(matchState, result, environmentMask, timeRemaining, timeLimit, players);
+        // Breakable rocks: their count, then one state byte each.
+        if (buffer.remaining() < 1)
+            return null;
+        int breakableCount = buffer.get() & 0xFF;
+        if (buffer.remaining() < breakableCount)
+            return null;
+        byte[] breakables = new byte[breakableCount];
+        buffer.get(breakables);
+
+        return new Snapshot(matchState, result, environmentMask, timeRemaining, timeLimit, players, breakables);
     }
 }

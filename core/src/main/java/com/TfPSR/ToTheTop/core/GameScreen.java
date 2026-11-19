@@ -157,7 +157,8 @@ public class GameScreen extends ScreenAdapter {
         // viewport set to theirs; the world must always use the game one.
         viewport.apply();
 
-        terrainRenderer.render(camera.combined);
+        terrainRenderer.render(camera.combined,
+                currentSnapshot == null ? null : currentSnapshot.breakables());
 
         mapRenderer.setView(camera);
         mapRenderer.render();

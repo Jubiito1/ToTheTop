@@ -33,4 +33,5 @@ python mapgen3.py 1 ../../assets/maps/map.tmx  # also write it
 
 The committed map is seed 57 with two manual edits made afterwards: rock `R1` was
 removed and `PlayerSpawn` moved to x = 691 px, to the right of `R0`. Regenerating
-overwrites those edits.
+overwrites those edits. The six breakable rocks (`R47`, `R10`, `R25`, `R29`, `R35`,
+`R23`, type `Breakable`) were also marked by hand.
