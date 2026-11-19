@@ -25,14 +25,22 @@ public class TerrainRenderer implements Disposable {
 
     private static final Color OUTLINE_COLOR = new Color(0.52f, 0.58f, 0.66f, 1f);
 
+    /** Colour the rocks fade into toward the top of the climb: snowy, slightly cold. */
+    private static final Color SNOW_COLOR = new Color(0.88f, 0.90f, 0.94f, 1f);
+    private static final Color SNOW_OUTLINE_COLOR = new Color(0.66f, 0.71f, 0.80f, 1f);
+    /** Share of snow on the highest rocks below the summit (1 would be pure snow). */
+    private static final float MAX_SNOW = 0.85f;
+
+    /** The summit rock, the highest of the map, is golden. */
+    private static final Color SUMMIT_COLOR = new Color(0.86f, 0.68f, 0.20f, 1f);
+    private static final Color SUMMIT_OUTLINE_COLOR = new Color(1f, 0.86f, 0.40f, 1f);
+
     private final ShapeRenderer shapes = new ShapeRenderer();
     private final Array<Triangle> triangles = new Array<>();
-    private final Array<float[]> outlines = new Array<>();
+    private final Array<Outline> outlines = new Array<>();
 
     public TerrainRenderer(MapObjects surfaces) {
-        EarClippingTriangulator triangulator = new EarClippingTriangulator();
-
-        int rockIndex = 0;
+        Array<float[]> rocks = new Array<>();
         for (MapObject object : surfaces) {
             if (!(object instanceof PolygonMapObject polygon))
                 continue;
@@ -41,22 +49,62 @@ public class TerrainRenderer implements Disposable {
             float[] meters = new float[pixels.length];
             for (int i = 0; i < pixels.length; i++)
                 meters[i] = pixels[i] / Constants.PIXELS_PER_METER;
+            rocks.add(meters);
+        }
 
-            Color color = ROCK_COLORS[rockIndex++ % ROCK_COLORS.length];
+        // The summit is the rock that reaches highest; the others whiten
+        // between the lowest top (the floor) and the highest top below the summit.
+        int summit = -1;
+        for (int i = 0; i < rocks.size; i++) {
+            if (summit == -1 || topOf(rocks.get(i)) > topOf(rocks.get(summit)))
+                summit = i;
+        }
+        float lowest = Float.MAX_VALUE;
+        float highest = -Float.MAX_VALUE;
+        for (int i = 0; i < rocks.size; i++) {
+            if (i == summit)
+                continue;
+            lowest = Math.min(lowest, topOf(rocks.get(i)));
+            highest = Math.max(highest, topOf(rocks.get(i)));
+        }
+
+        EarClippingTriangulator triangulator = new EarClippingTriangulator();
+        for (int i = 0; i < rocks.size; i++) {
+            float[] meters = rocks.get(i);
+            Color fill;
+            Color outline;
+            if (i == summit) {
+                fill = SUMMIT_COLOR;
+                outline = SUMMIT_OUTLINE_COLOR;
+            } else {
+                float height = highest > lowest ? (topOf(meters) - lowest) / (highest - lowest) : 0f;
+                float snow = MAX_SNOW * height;
+                fill = new Color(ROCK_COLORS[i % ROCK_COLORS.length]).lerp(SNOW_COLOR, snow);
+                outline = new Color(OUTLINE_COLOR).lerp(SNOW_OUTLINE_COLOR, snow);
+            }
+
             ShortArray indices = triangulator.computeTriangles(meters);
-            for (int i = 0; i + 2 < indices.size; i += 3) {
-                int a = indices.get(i) * 2;
-                int b = indices.get(i + 1) * 2;
-                int c = indices.get(i + 2) * 2;
+            for (int t = 0; t + 2 < indices.size; t += 3) {
+                int a = indices.get(t) * 2;
+                int b = indices.get(t + 1) * 2;
+                int c = indices.get(t + 2) * 2;
                 triangles.add(new Triangle(
                         meters[a], meters[a + 1],
                         meters[b], meters[b + 1],
                         meters[c], meters[c + 1],
-                        color));
+                        fill));
             }
 
-            outlines.add(meters);
+            outlines.add(new Outline(meters, outline));
         }
+    }
+
+    /** Highest y of a polygon given as x/y pairs, in meters. */
+    private static float topOf(float[] vertices) {
+        float top = -Float.MAX_VALUE;
+        for (int i = 1; i < vertices.length; i += 2)
+            top = Math.max(top, vertices[i]);
+        return top;
     }
 
     public void render(Matrix4 projection) {
@@ -72,9 +120,10 @@ public class TerrainRenderer implements Disposable {
         shapes.end();
 
         shapes.begin(ShapeRenderer.ShapeType.Line);
-        shapes.setColor(OUTLINE_COLOR);
-        for (float[] outline : outlines)
-            shapes.polygon(outline);
+        for (Outline outline : outlines) {
+            shapes.setColor(outline.color);
+            shapes.polygon(outline.vertices);
+        }
         shapes.end();
     }
 
@@ -84,5 +133,8 @@ public class TerrainRenderer implements Disposable {
     }
 
     private record Triangle(float x1, float y1, float x2, float y2, float x3, float y3, Color color) {
+    }
+
+    private record Outline(float[] vertices, Color color) {
     }
 }
