@@ -10,6 +10,27 @@ to Semantic Versioning.
 
 ---
 
+## [1.0.0] - 2026-11-19
+
+### Added
+
+* Added a **Play again** button on the result screen: it returns to the waiting room keeping the connection. The room shows who is still on the results and who is the host.
+* Added a **Time's up!** result and a red vignette that grows during the last 30% of the time limit, without a permanent HUD.
+* Added aiming the impulse with the keyboard: W with A or D sends a steeper jump (protocol 3).
+* Added breakable rocks: ochre with a crack, they turn red, crack further and shake as they wear, and only their outline remains while broken (protocol 6).
+* Added a new climbing map: scattered rocks with forks and dead ends, easy at the bottom and harder at the top, a 20 m deep floor, side limits (`PlayArea`), a `Summit` area and a 6-minute time limit.
+* Added the map generator in `tools/mapgen` to regenerate or tune the map.
+
+### Changed
+
+* Hand movement no longer depends on the window size, resolution or zoom.
+* The camera follows the head of the local player only and stops at the side limits of the map.
+* Rocks whiten with height and the summit rock is golden.
+* The host is now announced by the server instead of always being slot 0 (protocol 5).
+* Protocol updated to version 6: clients and servers from older versions are not compatible.
+
+---
+
 ## [0.8.1] - 2026-11-17
 
 ### Fixed
